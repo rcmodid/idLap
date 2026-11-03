@@ -5,11 +5,12 @@
 #include <esp_wifi.h>
 
 #include <IdLapBurstPengirim.h>
+#include <IdLapPinout.h>
 #include <IdLapPemicuIr.h>
 
 namespace {
-constexpr uint8_t kPinIrMasuk = 3;
-constexpr uint8_t kPinLedStatus = 8;
+constexpr uint8_t kPinIrMasuk = idlap_pinout::transponderIrMasuk;
+constexpr uint8_t kPinLedStatus = idlap_pinout::transponderLedStatus;
 constexpr uint32_t kIdAwal = 1001;
 constexpr uint8_t kKanalRadio = 11;
 constexpr uint8_t kAlamatBroadcast[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};

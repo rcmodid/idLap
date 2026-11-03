@@ -9,11 +9,12 @@
 
 #include <IdLapDeduplikasi.h>
 #include <IdLapPaket.h>
+#include <IdLapPinout.h>
 #include <IdLapWaktu.h>
 #include <IdLapZRound.h>
 
 namespace {
-constexpr uint8_t kPinLedKeluar = 8;
+constexpr uint8_t kPinLedKeluar = idlap_pinout::decoderLedKeluar;
 constexpr uint8_t kKanalRadio = 11;
 constexpr uint32_t kPulsaLedUs = 50000;
 
