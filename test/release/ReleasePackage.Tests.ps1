@@ -1,0 +1,41 @@
+$repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
+$packageScript = Join-Path $repoRoot "scripts\Package-Release.ps1"
+
+Describe "Package-Release" {
+    It "creates an ESP Web Tools manifest and SHA-256 checksums for every firmware profile" {
+        $buildRoot = Join-Path $TestDrive "build"
+        $outputRoot = Join-Path $TestDrive "release"
+        $bootApp0Path = Join-Path $TestDrive "boot_app0.bin"
+        $profiles = @(
+            "c3_transponder",
+            "c3_decoder_minimal",
+            "c3_decoder_w5500",
+            "c3_decoder_lengkap"
+        )
+
+        foreach ($profile in $profiles) {
+            $profileDir = Join-Path $buildRoot $profile
+            New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
+            [System.IO.File]::WriteAllBytes((Join-Path $profileDir "bootloader.bin"), [byte[]](1, 2))
+            [System.IO.File]::WriteAllBytes((Join-Path $profileDir "partitions.bin"), [byte[]](3, 4))
+            [System.IO.File]::WriteAllBytes((Join-Path $profileDir "firmware.bin"), [byte[]](7, 8))
+        }
+        [System.IO.File]::WriteAllBytes($bootApp0Path, [byte[]](5, 6))
+
+        & $packageScript -BuildDirectory $buildRoot -BootApp0Path $bootApp0Path -OutputDirectory $outputRoot -Version "v1.2.3"
+        $? | Should Be $true
+
+        $manifest = Get-Content (Join-Path $outputRoot "manifest.json") -Raw | ConvertFrom-Json
+        $manifest.version | Should Be "v1.2.3"
+        $manifest.firmware.Count | Should Be 4
+        $manifest.firmware[0].parts[0].address | Should Be "0x0"
+        $manifest.firmware[0].parts[1].address | Should Be "0x8000"
+        $manifest.firmware[0].parts[2].address | Should Be "0xe000"
+        $manifest.firmware[0].parts[3].address | Should Be "0x10000"
+
+        $checksums = Get-Content (Join-Path $outputRoot "SHA256SUMS")
+        $checksums.Count | Should Be 16
+        ($checksums -join "`n") | Should Match "c3_transponder-bootloader.bin"
+        ($checksums -join "`n") | Should Match "c3_decoder_lengkap-firmware.bin"
+    }
+}
