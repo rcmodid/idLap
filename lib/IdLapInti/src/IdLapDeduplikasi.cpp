@@ -15,6 +15,9 @@ bool IdLapDeduplikasi::terima(const IdLapPaketV1& paket) {
 
   const uint8_t tujuan = tempatKosong == kKapasitas ? palingLama : tempatKosong;
   if (++penanda_ == 0) ++penanda_;
-  entri_[tujuan] = {paket.id, paket.nonceBoot, paket.urutan, penanda_};
+  entri_[tujuan].id = paket.id;
+  entri_[tujuan].nonceBoot = paket.nonceBoot;
+  entri_[tujuan].urutan = paket.urutan;
+  entri_[tujuan].penanda = penanda_;
   return true;
 }
