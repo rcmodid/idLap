@@ -14,25 +14,25 @@ void test_pin_led_status_dan_ir_transponder_sesuai_standar() {
   TEST_ASSERT_EQUAL_UINT8(8, idlap_pinout::transponderLedStatus);
 }
 
-void test_led_status_mati_120_ms_setelah_kirim_berhasil() {
+void test_led_status_mati_200_ms_setelah_kirim_berhasil() {
   IdLapIndikatorStatus indikator;
   TEST_ASSERT_TRUE(indikator.menyala());
   indikator.tampilkanHasilKirim(1000, true);
   TEST_ASSERT_FALSE(indikator.menyala());
-  indikator.perbarui(1119);
+  indikator.perbarui(1199);
   TEST_ASSERT_FALSE(indikator.menyala());
-  indikator.perbarui(1120);
+  indikator.perbarui(1200);
   TEST_ASSERT_TRUE(indikator.menyala());
 }
 
 void test_led_status_berkedip_dua_kali_setelah_kirim_gagal() {
   IdLapIndikatorStatus indikator;
   indikator.tampilkanHasilKirim(1000, false);
-  indikator.perbarui(1120);
+  indikator.perbarui(1200);
   TEST_ASSERT_TRUE(indikator.menyala());
-  indikator.perbarui(1240);
+  indikator.perbarui(1400);
   TEST_ASSERT_FALSE(indikator.menyala());
-  indikator.perbarui(1360);
+  indikator.perbarui(1600);
   TEST_ASSERT_TRUE(indikator.menyala());
 }
 
@@ -60,7 +60,7 @@ int main(int, char**) {
   UNITY_BEGIN();
   RUN_TEST(test_id_transponder_bawaan_adalah_12110);
   RUN_TEST(test_pin_led_status_dan_ir_transponder_sesuai_standar);
-  RUN_TEST(test_led_status_mati_120_ms_setelah_kirim_berhasil);
+  RUN_TEST(test_led_status_mati_200_ms_setelah_kirim_berhasil);
   RUN_TEST(test_led_status_berkedip_dua_kali_setelah_kirim_gagal);
   RUN_TEST(test_frame_ir_golap_0x09_memiliki_timing_yang_diharapkan_penerima);
   return UNITY_END();

@@ -9,6 +9,7 @@ constexpr uint16_t kHeaderUs = 1200;
 constexpr uint16_t kSpasiUs = 400;
 constexpr uint16_t kSatuUs = 900;
 constexpr uint16_t kNolUs = 350;
+constexpr uint16_t kFaseIndikatorMs = 200;
 }
 
 namespace idlap_konfigurasi {
@@ -25,7 +26,7 @@ void IdLapIndikatorStatus::tampilkanHasilKirim(uint32_t waktuMs,
 }
 
 void IdLapIndikatorStatus::perbarui(uint32_t waktuMs) {
-  if (static_cast<uint32_t>(waktuMs - sejakMatiMs_) < 120) return;
+  if (static_cast<uint32_t>(waktuMs - sejakMatiMs_) < kFaseIndikatorMs) return;
   sejakMatiMs_ = waktuMs;
   if (!menyala_) {
     --pulsaMatiTersisa_;
