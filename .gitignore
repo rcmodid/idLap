@@ -1,4 +1,5 @@
 .pio/
+dist/
 .vscode/
 compile_commands.json
 .worktrees/
