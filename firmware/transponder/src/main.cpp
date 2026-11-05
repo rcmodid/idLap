@@ -5,13 +5,14 @@
 #include <esp_wifi.h>
 
 #include <IdLapBurstPengirim.h>
+#include <IdLapIndikatorStatus.h>
+#include <IdLapKonfigurasiPerangkat.h>
 #include <IdLapPinout.h>
 #include <IdLapPemicuIr.h>
 
 namespace {
 constexpr uint8_t kPinIrMasuk = idlap_pinout::transponderIrMasuk;
 constexpr uint8_t kPinLedStatus = idlap_pinout::transponderLedStatus;
-constexpr uint32_t kIdAwal = 1001;
 constexpr uint8_t kKanalRadio = 11;
 constexpr uint8_t kAlamatBroadcast[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
@@ -86,9 +87,9 @@ void loop() {
                          antreanTepi[ekorTepi].levelTinggi};
     ekorTepi = static_cast<uint8_t>((ekorTepi + 1) % 16);
     if (pemicuIr.masukkanTepi(tepi.waktuUs, tepi.levelTinggi)) {
-      burst.mulaiEvent(kIdAwal, nonceBoot);
+      burst.mulaiEvent(idlap_konfigurasi::kIdTransponderBawaan, nonceBoot);
     }
   }
   lanjutkanBurst();
-  digitalWrite(kPinLedStatus, burst.aktif() ? HIGH : LOW);
+  digitalWrite(kPinLedStatus, idLapLevelLedStatus(burst.aktif()));
 }

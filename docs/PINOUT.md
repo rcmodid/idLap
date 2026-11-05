@@ -8,7 +8,7 @@ rcmod.id memakai wiring yang sama. Semua sinyal bekerja pada logika 3,3 V.
 | Fungsi | GPIO | Catatan |
 | --- | ---: | --- |
 | OUT penerima IR 38 kHz | 0 | input interrupt, gunakan penerima IR demodulasi |
-| LED status | 10 | LED eksternal + resistor 330–1 kΩ ke GND |
+| LED status | 8 | LED biru onboard, aktif LOW; terang saat idle |
 | USB native | 18/19 | dicadangkan untuk flash dan serial USB |
 
 ## Decoder Minimal
@@ -32,6 +32,7 @@ rcmod.id memakai wiring yang sama. Semua sinyal bekerja pada logika 3,3 V.
 | OLED I²C SDA | 20 |
 | OLED I²C SCL | 21 |
 
-GPIO2, GPIO8, dan GPIO9 tidak dipakai karena merupakan strapping pin. GPIO12–17
+GPIO2 dan GPIO9 tidak dipakai karena merupakan strapping pin. GPIO8 dipakai
+khusus untuk LED biru onboard. GPIO12–17
 dicadangkan flash, sedangkan GPIO18–19 dicadangkan USB native. Konfigurasi ini
 mengikuti pembatasan GPIO ESP32-C3 dari Espressif.

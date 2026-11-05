@@ -8,6 +8,7 @@
 #include <freertos/queue.h>
 
 #include <IdLapDeduplikasi.h>
+#include <IdLapFrameIr.h>
 #include <IdLapPaket.h>
 #include <IdLapPinout.h>
 #include <IdLapWaktu.h>
@@ -15,8 +16,14 @@
 
 namespace {
 constexpr uint8_t kPinLedKeluar = idlap_pinout::decoderLedKeluar;
+constexpr uint8_t kPinIrKeluar = idlap_pinout::decoderIrKeluar;
 constexpr uint8_t kKanalRadio = 11;
 constexpr uint32_t kPulsaLedUs = 50000;
+constexpr uint32_t kJedaFrameIrUs = 20000;
+constexpr uint32_t kFrekuensiCarrierIrHz = 38000;
+constexpr uint8_t kKanalPwmIr = 0;
+constexpr uint8_t kResolusiPwmIr = 8;
+constexpr uint8_t kDutyCarrierIr = 128;
 
 struct PaketMasuk {
   uint8_t data[IDLAP_UKURAN_PAKET];
@@ -28,6 +35,21 @@ struct PaketMasuk {
 QueueHandle_t antreanRadio = nullptr;
 IdLapDeduplikasi deduplikasi;
 int64_t ledSampaiUs = 0;
+int64_t frameIrBerikutnyaUs = 0;
+
+void aturCarrierIr(bool aktif) {
+  ledcWrite(kKanalPwmIr, aktif ? kDutyCarrierIr : 0);
+}
+
+void kirimFrameIr() {
+  for (uint8_t indeks = 0; indeks < IdLapFrameIr::jumlahInterval(); ++indeks) {
+    IdLapIntervalIr interval = {};
+    if (!IdLapFrameIr::ambilInterval(indeks, &interval)) return;
+    aturCarrierIr(interval.carrierAktif);
+    delayMicroseconds(interval.durasiUs);
+  }
+  aturCarrierIr(false);
+}
 
 void antrekanPaket(const uint8_t* data, int panjang, uint32_t waktuDriverUs) {
   if (data == nullptr || panjang != IDLAP_UKURAN_PAKET || antreanRadio == nullptr) return;
@@ -62,12 +84,21 @@ void mulaiRadio() {
 
 void setup() {
   pinMode(kPinLedKeluar, OUTPUT);
+  ledcSetup(kKanalPwmIr, kFrekuensiCarrierIrHz, kResolusiPwmIr);
+  ledcAttachPin(kPinIrKeluar, kKanalPwmIr);
+  aturCarrierIr(false);
   Serial.begin(19200);
   antreanRadio = xQueueCreate(64, sizeof(PaketMasuk));
   mulaiRadio();
 }
 
 void loop() {
+  const int64_t sekarangUs = esp_timer_get_time();
+  if (sekarangUs >= frameIrBerikutnyaUs) {
+    frameIrBerikutnyaUs = sekarangUs + kJedaFrameIrUs;
+    kirimFrameIr();
+  }
+
   PaketMasuk masuk = {};
   while (xQueueReceive(antreanRadio, &masuk, 0) == pdTRUE) {
     IdLapPaketV1 paket = {};
