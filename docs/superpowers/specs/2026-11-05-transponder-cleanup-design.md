@@ -25,7 +25,7 @@ terdeteksi, dan jendelanya diperpanjang oleh hasil pengiriman paket.
 
 - Belum mengimplementasikan parser serial/NVS di firmware pada perubahan ini.
 - Tidak membuat atau mengubah aplikasi web `rcmod.id/idlap`.
-- Tidak mengubah frame IR GoLap `0x09`, 4-bit LSB-first, atau payload radio
+- Tidak mengubah frame IR kompatibel gate lama `0x09`, 4-bit LSB-first, atau payload radio
   idLap v1.
 
 ## Pendekatan

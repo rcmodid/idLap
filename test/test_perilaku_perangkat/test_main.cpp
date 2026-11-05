@@ -1,41 +1,42 @@
 #include <unity.h>
 
 #include <IdLapFrameIr.h>
-#include <IdLapIndikatorStatus.h>
+#include <IdLapStatusIndicator.h>
 #include <IdLapKonfigurasiPerangkat.h>
 #include <IdLapPinout.h>
 
-void test_id_transponder_bawaan_adalah_12110() {
-  TEST_ASSERT_EQUAL_UINT32(12110, idlap_konfigurasi::kIdTransponderBawaan);
+void test_default_transponder_id_is_12110() {
+  TEST_ASSERT_EQUAL_UINT32(12110, idlap_config::kDefaultTransponderId);
 }
 
-void test_pin_led_status_dan_ir_transponder_sesuai_standar() {
-  TEST_ASSERT_EQUAL_UINT8(1, idlap_pinout::transponderIrMasuk);
-  TEST_ASSERT_EQUAL_UINT8(8, idlap_pinout::transponderLedStatus);
+void test_transponder_pins_match_the_hardware_contract() {
+  TEST_ASSERT_EQUAL_UINT8(1, idlap_pins::transponderIrInput);
+  TEST_ASSERT_EQUAL_UINT8(8, idlap_pins::transponderStatusLed);
+  TEST_ASSERT_EQUAL_UINT8(3, idlap_pins::transponderBuzzer);
 }
 
-void test_led_status_menyala_200_ms_setelah_deteksi() {
-  IdLapIndikatorStatus indikator;
-  TEST_ASSERT_FALSE(indikator.menyala());
-  indikator.tampilkanDeteksi(1000);
-  TEST_ASSERT_TRUE(indikator.menyala());
-  indikator.perbarui(1199);
-  TEST_ASSERT_TRUE(indikator.menyala());
-  indikator.perbarui(1200);
-  TEST_ASSERT_FALSE(indikator.menyala());
+void test_status_led_is_on_for_300_ms_after_detection() {
+  IdLapStatusIndicator indicator;
+  TEST_ASSERT_FALSE(indicator.isOn());
+  indicator.showDetection(1000);
+  TEST_ASSERT_TRUE(indicator.isOn());
+  indicator.update(1299);
+  TEST_ASSERT_TRUE(indicator.isOn());
+  indicator.update(1300);
+  TEST_ASSERT_FALSE(indicator.isOn());
 }
 
-void test_hasil_kirim_memperpanjang_nyala_led_setelah_deteksi() {
-  IdLapIndikatorStatus indikator;
-  indikator.tampilkanDeteksi(1000);
-  indikator.tampilkanHasilKirim(1100);
-  indikator.perbarui(1299);
-  TEST_ASSERT_TRUE(indikator.menyala());
-  indikator.perbarui(1300);
-  TEST_ASSERT_FALSE(indikator.menyala());
+void test_send_result_extends_the_status_led_duration() {
+  IdLapStatusIndicator indicator;
+  indicator.showDetection(1000);
+  indicator.showTransmitResult(1100);
+  indicator.update(1399);
+  TEST_ASSERT_TRUE(indicator.isOn());
+  indicator.update(1400);
+  TEST_ASSERT_FALSE(indicator.isOn());
 }
 
-void test_frame_ir_golap_0x09_memiliki_timing_yang_diharapkan_penerima() {
+void test_legacy_gate_frame_0x09_has_expected_receiver_timing() {
   TEST_ASSERT_EQUAL_UINT8(0x09, IdLapFrameIr::kode());
   TEST_ASSERT_EQUAL_UINT8(9, IdLapFrameIr::jumlahInterval());
 
@@ -57,10 +58,10 @@ void test_frame_ir_golap_0x09_memiliki_timing_yang_diharapkan_penerima() {
 
 int main(int, char**) {
   UNITY_BEGIN();
-  RUN_TEST(test_id_transponder_bawaan_adalah_12110);
-  RUN_TEST(test_pin_led_status_dan_ir_transponder_sesuai_standar);
-  RUN_TEST(test_led_status_menyala_200_ms_setelah_deteksi);
-  RUN_TEST(test_hasil_kirim_memperpanjang_nyala_led_setelah_deteksi);
-  RUN_TEST(test_frame_ir_golap_0x09_memiliki_timing_yang_diharapkan_penerima);
+  RUN_TEST(test_default_transponder_id_is_12110);
+  RUN_TEST(test_transponder_pins_match_the_hardware_contract);
+  RUN_TEST(test_status_led_is_on_for_300_ms_after_detection);
+  RUN_TEST(test_send_result_extends_the_status_led_duration);
+  RUN_TEST(test_legacy_gate_frame_0x09_has_expected_receiver_timing);
   return UNITY_END();
 }

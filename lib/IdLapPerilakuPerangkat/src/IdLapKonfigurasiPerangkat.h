@@ -2,6 +2,6 @@
 
 #include <stdint.h>
 
-namespace idlap_konfigurasi {
-extern const uint32_t kIdTransponderBawaan;
+namespace idlap_config {
+extern const uint32_t kDefaultTransponderId;
 }

@@ -19,7 +19,7 @@ bool kirimKode(IdLapPemicuIr* pemicu, uint32_t* waktuUs, uint8_t kode,
 
 }  // namespace
 
-void test_frame_golap_0x09_empat_bit_memicu_satu_event() {
+void test_legacy_gate_frame_0x09_four_bits_triggers_one_event() {
   IdLapPemicuIr pemicu;
   uint32_t waktuUs = 0;
   TEST_ASSERT_TRUE(kirimKode(&pemicu, &waktuUs, 0x09, 4));
@@ -37,7 +37,7 @@ void test_kode_ir_salah_dan_pengulangan_cepat_ditolak() {
   TEST_ASSERT_EQUAL_UINT32(2, pemicu.jumlahPemicu());
 }
 
-void test_frame_golap_tiga_bit_tidak_boleh_memicu() {
+void test_legacy_gate_frame_with_three_bits_does_not_trigger() {
   IdLapPemicuIr pemicu;
   uint32_t waktuUs = 0;
   TEST_ASSERT_FALSE(kirimKode(&pemicu, &waktuUs, 0x09, 3));
@@ -46,8 +46,8 @@ void test_frame_golap_tiga_bit_tidak_boleh_memicu() {
 
 int main(int, char**) {
   UNITY_BEGIN();
-  RUN_TEST(test_frame_golap_0x09_empat_bit_memicu_satu_event);
+  RUN_TEST(test_legacy_gate_frame_0x09_four_bits_triggers_one_event);
   RUN_TEST(test_kode_ir_salah_dan_pengulangan_cepat_ditolak);
-  RUN_TEST(test_frame_golap_tiga_bit_tidak_boleh_memicu);
+  RUN_TEST(test_legacy_gate_frame_with_three_bits_does_not_trigger);
   return UNITY_END();
 }

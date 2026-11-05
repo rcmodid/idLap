@@ -6,7 +6,7 @@
 source approachable with English identifiers, and document the stable pin and
 USB-configuration contract for `rcmod.id/idlap`.
 
-**Architecture:** Keep the existing ISR queue, ESP-NOW send mailbox, GoLap IR
+**Architecture:** Keep the existing ISR queue, ESP-NOW send mailbox, legacy-gate IR
 frame, and idLap packet format. Rename only internal identifiers and extract
 the indicator's 300 ms activity window behind clear English methods. Treat the
 pinout and USB serial protocol as documentation contracts; no serial parser or
@@ -22,7 +22,7 @@ Markdown documentation.
 - Firmware identifiers are English; comments may be Indonesian.
 - LED is GPIO8 active-LOW, default off, active for 300 ms after detection and
   each send completion.
-- IR receiver stays GPIO1; the IR GoLap frame and idLap radio packet remain
+- IR receiver stays GPIO1; the legacy-gate IR frame and idLap radio packet remain
   unchanged.
 - Transponder remains Wi-Fi STA + ESP-NOW on channel 11; never create an AP.
 - USB serial contract is documented only; do not add a serial parser/NVS.
@@ -42,7 +42,8 @@ Markdown documentation.
 ### Task 1: Refactor the transponder indicator and entrypoint
 
 **Files:**
-- Modify: `lib/IdLapPerilakuPerangkat/src/IdLapIndikatorStatus.h`
+- Replace the old indicator header with
+  `lib/IdLapPerilakuPerangkat/src/IdLapStatusIndicator.h`
 - Modify: `lib/IdLapPerilakuPerangkat/src/IdLapPerilakuPerangkat.cpp`
 - Modify: `firmware/transponder/src/main.cpp`
 - Modify: `test/test_perilaku_perangkat/test_main.cpp`

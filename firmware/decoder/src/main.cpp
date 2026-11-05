@@ -15,8 +15,8 @@
 #include <IdLapZRound.h>
 
 namespace {
-constexpr uint8_t kPinLedKeluar = idlap_pinout::decoderLedKeluar;
-constexpr uint8_t kPinIrKeluar = idlap_pinout::decoderIrKeluar;
+constexpr uint8_t kPinLedKeluar = idlap_pins::decoderDetectionLed;
+constexpr uint8_t kPinIrKeluar = idlap_pins::decoderIrOutput;
 constexpr uint8_t kKanalRadio = 11;
 constexpr uint32_t kPulsaLedUs = 50000;
 constexpr uint32_t kJedaFrameIrUs = 20000;
