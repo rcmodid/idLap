@@ -18,20 +18,19 @@ const uint32_t kIdTransponderBawaan = 12110;
 
 bool IdLapIndikatorStatus::menyala() const { return menyala_; }
 
-void IdLapIndikatorStatus::tampilkanHasilKirim(uint32_t waktuMs,
-                                                bool berhasil) {
-  menyala_ = false;
-  sejakMatiMs_ = waktuMs;
-  pulsaMatiTersisa_ = berhasil ? 1 : 2;
+void IdLapIndikatorStatus::tampilkanDeteksi(uint32_t waktuMs) {
+  menyala_ = true;
+  sejakNyalaMs_ = waktuMs;
+}
+
+void IdLapIndikatorStatus::tampilkanHasilKirim(uint32_t waktuMs) {
+  menyala_ = true;
+  sejakNyalaMs_ = waktuMs;
 }
 
 void IdLapIndikatorStatus::perbarui(uint32_t waktuMs) {
-  if (static_cast<uint32_t>(waktuMs - sejakMatiMs_) < kFaseIndikatorMs) return;
-  sejakMatiMs_ = waktuMs;
-  if (!menyala_) {
-    --pulsaMatiTersisa_;
-    menyala_ = true;
-  } else if (pulsaMatiTersisa_ > 0) {
+  if (menyala_ &&
+      static_cast<uint32_t>(waktuMs - sejakNyalaMs_) >= kFaseIndikatorMs) {
     menyala_ = false;
   }
 }

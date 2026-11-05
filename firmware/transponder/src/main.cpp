@@ -27,7 +27,7 @@ volatile uint8_t kepalaTepi = 0;
 volatile uint8_t ekorTepi = 0;
 volatile bool kirimSelesai = false;
 volatile uint32_t jumlahKirimGagal = 0;
-volatile int8_t hasilKirimTerakhir = -1;
+volatile bool hasilKirimSiap = false;
 portMUX_TYPE hasilKirimMux = portMUX_INITIALIZER_UNLOCKED;
 IdLapPemicuIr pemicuIr;
 IdLapBurstPengirim burst;
@@ -46,7 +46,7 @@ void IRAM_ATTR saatTepiIr() {
 void saatKirimSelesai(const uint8_t*, esp_now_send_status_t status) {
   if (status != ESP_NOW_SEND_SUCCESS) ++jumlahKirimGagal;
   portENTER_CRITICAL(&hasilKirimMux);
-  hasilKirimTerakhir = status == ESP_NOW_SEND_SUCCESS ? 1 : 0;
+  hasilKirimSiap = true;
   portEXIT_CRITICAL(&hasilKirimMux);
   kirimSelesai = true;
 }
@@ -89,21 +89,22 @@ void setup() {
 }
 
 void loop() {
-  int8_t hasilKirim = -1;
+  bool hasilKirim = false;
   portENTER_CRITICAL(&hasilKirimMux);
-  hasilKirim = hasilKirimTerakhir;
-  hasilKirimTerakhir = -1;
+  hasilKirim = hasilKirimSiap;
+  hasilKirimSiap = false;
   portEXIT_CRITICAL(&hasilKirimMux);
-  if (hasilKirim >= 0) {
-    indikatorStatus.tampilkanHasilKirim(millis(), hasilKirim != 0);
+  if (hasilKirim) {
+    indikatorStatus.tampilkanHasilKirim(millis());
   }
 
   while (ekorTepi != kepalaTepi) {
     const TepiIr tepi = {antreanTepi[ekorTepi].waktuUs,
                          antreanTepi[ekorTepi].levelTinggi};
     ekorTepi = static_cast<uint8_t>((ekorTepi + 1) % 16);
-    if (pemicuIr.masukkanTepi(tepi.waktuUs, tepi.levelTinggi)) {
-      burst.mulaiEvent(idlap_konfigurasi::kIdTransponderBawaan, nonceBoot);
+    if (pemicuIr.masukkanTepi(tepi.waktuUs, tepi.levelTinggi) &&
+        burst.mulaiEvent(idlap_konfigurasi::kIdTransponderBawaan, nonceBoot)) {
+      indikatorStatus.tampilkanDeteksi(millis());
     }
   }
   lanjutkanBurst();
