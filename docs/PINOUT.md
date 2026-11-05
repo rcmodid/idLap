@@ -7,7 +7,7 @@ rcmod.id memakai wiring yang sama. Semua sinyal bekerja pada logika 3,3 V.
 
 | Fungsi | GPIO | Catatan |
 | --- | ---: | --- |
-| OUT penerima IR 38 kHz | 0 | input interrupt, gunakan penerima IR demodulasi |
+| OUT penerima IR 38 kHz | 1 | input interrupt, gunakan penerima IR demodulasi |
 | LED status | 8 | LED biru onboard, aktif LOW; terang saat idle |
 | USB native | 18/19 | dicadangkan untuk flash dan serial USB |
 

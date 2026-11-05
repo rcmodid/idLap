@@ -10,6 +10,7 @@ void test_id_transponder_bawaan_adalah_12110() {
 }
 
 void test_led_status_menyala_saat_idle_dan_mati_saat_mengirim() {
+  TEST_ASSERT_EQUAL_UINT8(1, idlap_pinout::transponderIrMasuk);
   TEST_ASSERT_EQUAL_UINT8(8, idlap_pinout::transponderLedStatus);
   TEST_ASSERT_EQUAL_UINT8(0, idLapLevelLedStatus(false));
   TEST_ASSERT_EQUAL_UINT8(1, idLapLevelLedStatus(true));
