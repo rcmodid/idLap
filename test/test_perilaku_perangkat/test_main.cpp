@@ -15,17 +15,17 @@ void test_led_status_menyala_saat_idle_dan_mati_saat_mengirim() {
   TEST_ASSERT_EQUAL_UINT8(1, idLapLevelLedStatus(true));
 }
 
-void test_frame_ir_0x31_memiliki_timing_yang_diharapkan_penerima() {
-  TEST_ASSERT_EQUAL_UINT8(0x31, IdLapFrameIr::kode());
-  TEST_ASSERT_EQUAL_UINT8(17, IdLapFrameIr::jumlahInterval());
+void test_frame_ir_golap_0x09_memiliki_timing_yang_diharapkan_penerima() {
+  TEST_ASSERT_EQUAL_UINT8(0x09, IdLapFrameIr::kode());
+  TEST_ASSERT_EQUAL_UINT8(9, IdLapFrameIr::jumlahInterval());
 
   IdLapIntervalIr interval = {};
   TEST_ASSERT_TRUE(IdLapFrameIr::ambilInterval(0, &interval));
   TEST_ASSERT_TRUE(interval.carrierAktif);
   TEST_ASSERT_EQUAL_UINT16(1200, interval.durasiUs);
 
-  const uint16_t durasiMark[] = {900, 350, 350, 350, 900, 900, 350, 350};
-  for (uint8_t bit = 0; bit < 8; ++bit) {
+  const uint16_t durasiMark[] = {900, 350, 350, 900};
+  for (uint8_t bit = 0; bit < 4; ++bit) {
     TEST_ASSERT_TRUE(IdLapFrameIr::ambilInterval(1 + bit * 2, &interval));
     TEST_ASSERT_FALSE(interval.carrierAktif);
     TEST_ASSERT_EQUAL_UINT16(400, interval.durasiUs);
@@ -39,6 +39,6 @@ int main(int, char**) {
   UNITY_BEGIN();
   RUN_TEST(test_id_transponder_bawaan_adalah_12110);
   RUN_TEST(test_led_status_menyala_saat_idle_dan_mati_saat_mengirim);
-  RUN_TEST(test_frame_ir_0x31_memiliki_timing_yang_diharapkan_penerima);
+  RUN_TEST(test_frame_ir_golap_0x09_memiliki_timing_yang_diharapkan_penerima);
   return UNITY_END();
 }

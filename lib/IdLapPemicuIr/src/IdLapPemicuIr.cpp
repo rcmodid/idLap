@@ -7,7 +7,8 @@ constexpr uint32_t kSatuUs = 900;
 constexpr uint32_t kNolUs = 350;
 constexpr uint32_t kToleransiUs = 180;
 constexpr uint32_t kCooldownUs = 1000000;
-constexpr uint8_t kKodeIdLap = 0x31;
+constexpr uint8_t kKodeGoLap = 0x09;
+constexpr uint8_t kJumlahBitKode = 4;
 
 bool dekat(uint32_t nilai, uint32_t target) {
   return nilai >= target - kToleransiUs && nilai <= target + kToleransiUs;
@@ -41,9 +42,9 @@ bool IdLapPemicuIr::masukkanTepi(uint32_t waktuUs, bool levelTinggi) {
         return false;
       }
       if (satu) kode_ |= static_cast<uint8_t>(1U << (indeksBit_ - 1));
-      if (++indeksBit_ == 9) {
+      if (++indeksBit_ == kJumlahBitKode + 1) {
         aktif_ = false;
-        if (kode_ != kKodeIdLap ||
+        if (kode_ != kKodeGoLap ||
             (jumlahPemicu_ != 0 && waktuUs - pemicuTerakhirUs_ < kCooldownUs)) {
           return false;
         }

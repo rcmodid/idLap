@@ -3,7 +3,8 @@
 #include "IdLapKonfigurasiPerangkat.h"
 
 namespace {
-constexpr uint8_t kKodeIdLap = 0x31;
+constexpr uint8_t kKodeGoLap = 0x09;
+constexpr uint8_t kJumlahBitKode = 4;
 constexpr uint16_t kHeaderUs = 1200;
 constexpr uint16_t kSpasiUs = 400;
 constexpr uint16_t kSatuUs = 900;
@@ -18,9 +19,9 @@ uint8_t idLapLevelLedStatus(bool pengirimanAktif) {
   return pengirimanAktif ? 1 : 0;
 }
 
-uint8_t IdLapFrameIr::kode() { return kKodeIdLap; }
+uint8_t IdLapFrameIr::kode() { return kKodeGoLap; }
 
-uint8_t IdLapFrameIr::jumlahInterval() { return 17; }
+uint8_t IdLapFrameIr::jumlahInterval() { return 1 + kJumlahBitKode * 2; }
 
 bool IdLapFrameIr::ambilInterval(uint8_t indeks, IdLapIntervalIr* hasil) {
   if (hasil == nullptr || indeks >= jumlahInterval()) return false;
@@ -34,6 +35,6 @@ bool IdLapFrameIr::ambilInterval(uint8_t indeks, IdLapIntervalIr* hasil) {
     *hasil = {false, kSpasiUs};
     return true;
   }
-  *hasil = {true, (kKodeIdLap & (1U << bit)) != 0 ? kSatuUs : kNolUs};
+  *hasil = {true, (kKodeGoLap & (1U << bit)) != 0 ? kSatuUs : kNolUs};
   return true;
 }
