@@ -3,6 +3,7 @@
 #include <esp_now.h>
 #include <esp_random.h>
 #include <esp_wifi.h>
+#include <freertos/portmacro.h>
 
 #include <IdLapBurstPengirim.h>
 #include <IdLapIndikatorStatus.h>
@@ -27,6 +28,7 @@ volatile uint8_t ekorTepi = 0;
 volatile bool kirimSelesai = false;
 volatile uint32_t jumlahKirimGagal = 0;
 volatile int8_t hasilKirimTerakhir = -1;
+portMUX_TYPE hasilKirimMux = portMUX_INITIALIZER_UNLOCKED;
 IdLapPemicuIr pemicuIr;
 IdLapBurstPengirim burst;
 IdLapIndikatorStatus indikatorStatus;
@@ -43,7 +45,9 @@ void IRAM_ATTR saatTepiIr() {
 
 void saatKirimSelesai(const uint8_t*, esp_now_send_status_t status) {
   if (status != ESP_NOW_SEND_SUCCESS) ++jumlahKirimGagal;
+  portENTER_CRITICAL(&hasilKirimMux);
   hasilKirimTerakhir = status == ESP_NOW_SEND_SUCCESS ? 1 : 0;
+  portEXIT_CRITICAL(&hasilKirimMux);
   kirimSelesai = true;
 }
 
@@ -85,9 +89,12 @@ void setup() {
 }
 
 void loop() {
-  const int8_t hasilKirim = hasilKirimTerakhir;
+  int8_t hasilKirim = -1;
+  portENTER_CRITICAL(&hasilKirimMux);
+  hasilKirim = hasilKirimTerakhir;
+  hasilKirimTerakhir = -1;
+  portEXIT_CRITICAL(&hasilKirimMux);
   if (hasilKirim >= 0) {
-    hasilKirimTerakhir = -1;
     indikatorStatus.tampilkanHasilKirim(millis(), hasilKirim != 0);
   }
 
