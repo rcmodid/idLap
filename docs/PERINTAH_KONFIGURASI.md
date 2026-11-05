@@ -12,4 +12,5 @@ Perintah ini tersedia pada mode konfigurasi, bukan aliran ZRound saat balap.
 | `RESET` | mengembalikan nilai awal idLap |
 | `VERSI` | menampilkan versi protokol perangkat |
 
-Pemicu IR idLap v1 adalah frame 38 kHz delapan bit dengan kode `0x31`.
+Pemicu IR idLap v1 mengikuti frame GoLap: carrier 38 kHz, kode `0x09`,
+empat bit, LSB-first.
