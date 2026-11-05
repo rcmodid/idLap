@@ -15,8 +15,24 @@ namespace idlap_konfigurasi {
 const uint32_t kIdTransponderBawaan = 12110;
 }
 
-uint8_t idLapLevelLedStatus(bool pengirimanAktif) {
-  return pengirimanAktif ? 1 : 0;
+bool IdLapIndikatorStatus::menyala() const { return menyala_; }
+
+void IdLapIndikatorStatus::tampilkanHasilKirim(uint32_t waktuMs,
+                                                bool berhasil) {
+  menyala_ = false;
+  sejakMatiMs_ = waktuMs;
+  pulsaMatiTersisa_ = berhasil ? 1 : 2;
+}
+
+void IdLapIndikatorStatus::perbarui(uint32_t waktuMs) {
+  if (static_cast<uint32_t>(waktuMs - sejakMatiMs_) < 120) return;
+  sejakMatiMs_ = waktuMs;
+  if (!menyala_) {
+    --pulsaMatiTersisa_;
+    menyala_ = true;
+  } else if (pulsaMatiTersisa_ > 0) {
+    menyala_ = false;
+  }
 }
 
 uint8_t IdLapFrameIr::kode() { return kKodeGoLap; }

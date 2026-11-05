@@ -26,8 +26,10 @@ volatile uint8_t kepalaTepi = 0;
 volatile uint8_t ekorTepi = 0;
 volatile bool kirimSelesai = false;
 volatile uint32_t jumlahKirimGagal = 0;
+volatile int8_t hasilKirimTerakhir = -1;
 IdLapPemicuIr pemicuIr;
 IdLapBurstPengirim burst;
+IdLapIndikatorStatus indikatorStatus;
 uint16_t nonceBoot = 0;
 bool paketDalamJalan = false;
 
@@ -41,6 +43,7 @@ void IRAM_ATTR saatTepiIr() {
 
 void saatKirimSelesai(const uint8_t*, esp_now_send_status_t status) {
   if (status != ESP_NOW_SEND_SUCCESS) ++jumlahKirimGagal;
+  hasilKirimTerakhir = status == ESP_NOW_SEND_SUCCESS ? 1 : 0;
   kirimSelesai = true;
 }
 
@@ -82,6 +85,12 @@ void setup() {
 }
 
 void loop() {
+  const int8_t hasilKirim = hasilKirimTerakhir;
+  if (hasilKirim >= 0) {
+    hasilKirimTerakhir = -1;
+    indikatorStatus.tampilkanHasilKirim(millis(), hasilKirim != 0);
+  }
+
   while (ekorTepi != kepalaTepi) {
     const TepiIr tepi = {antreanTepi[ekorTepi].waktuUs,
                          antreanTepi[ekorTepi].levelTinggi};
@@ -91,5 +100,6 @@ void loop() {
     }
   }
   lanjutkanBurst();
-  digitalWrite(kPinLedStatus, idLapLevelLedStatus(burst.aktif()));
+  indikatorStatus.perbarui(millis());
+  digitalWrite(kPinLedStatus, indikatorStatus.menyala() ? LOW : HIGH);
 }
