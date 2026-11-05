@@ -3,7 +3,8 @@
 Salin prompt berikut ke Codex pada proyek `rcmod.id/idlap`.
 
 ```text
-Tambahkan halaman konfigurasi transponder idLap melalui Web Serial. Baca
+Tambahkan form konfigurasi transponder idLap ke halaman `rcmod.id/idlap` yang
+sudah ada melalui Web Serial. Baca
 docs/PINOUT.md dan docs/PERINTAH_KONFIGURASI.md dari repository firmware idLap
 sebagai sumber kebenaran. Jangan membuat koneksi Wi-Fi, access point, pemindaian
 Wi-Fi, atau memasukkan kredensial Wi-Fi.
@@ -34,8 +35,7 @@ REBOOT -> OK REBOOTING
 VERSION -> OK IDLAP=<version>
 input salah -> ERR <reason>
 
-Catatan penting: firmware yang ada saat ini belum mengimplementasikan parser
-serial maupun penyimpanan NVS. Bangun UI dengan state "Firmware belum mendukung
-konfigurasi serial" apabila perangkat tidak menyediakan respons kontrak ini;
+Firmware transponder mengimplementasikan parser serial dan menyimpan ID ke
+NVS. Apabila perangkat tidak memberi respons, tampilkan kegagalan koneksi;
 jangan menggunakan fallback Web Bluetooth, Wi-Fi, atau data palsu.
 ```

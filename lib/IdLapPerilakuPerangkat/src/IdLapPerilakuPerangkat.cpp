@@ -9,7 +9,7 @@ constexpr uint16_t kHeaderDurationUs = 1200;
 constexpr uint16_t kSpaceDurationUs = 400;
 constexpr uint16_t kOneDurationUs = 900;
 constexpr uint16_t kZeroDurationUs = 350;
-constexpr uint16_t kIndicatorDurationMs = 300;
+constexpr uint16_t kIndicatorDurationMs = 500;
 }
 
 namespace idlap_config {

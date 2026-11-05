@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <Preferences.h>
 #include <WiFi.h>
 #include <esp_now.h>
 #include <esp_random.h>
@@ -8,6 +9,7 @@
 #include <IdLapBurstPengirim.h>
 #include <IdLapStatusIndicator.h>
 #include <IdLapKonfigurasiPerangkat.h>
+#include <IdLapKonfigurasi.h>
 #include <IdLapPinout.h>
 #include <IdLapPemicuIr.h>
 
@@ -15,6 +17,8 @@ namespace {
 constexpr uint8_t kIrInputPin = idlap_pins::transponderIrInput;
 constexpr uint8_t kStatusLedPin = idlap_pins::transponderStatusLed;
 constexpr uint8_t kRadioChannel = 11;
+constexpr char kPreferencesNamespace[] = "idlap";
+constexpr char kTransponderIdKey[] = "transponderId";
 constexpr uint8_t kBroadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 struct IrEdge {
@@ -34,6 +38,11 @@ IdLapBurstPengirim burstSender;
 IdLapStatusIndicator statusIndicator;
 uint16_t bootNonce = 0;
 bool packetInFlight = false;
+IdLapKonfigurasi transponderSettings = {idlap_config::kDefaultTransponderId,
+                                        kRadioChannel};
+Preferences preferences;
+char serialCommand[64] = {};
+size_t serialCommandLength = 0;
 
 void IRAM_ATTR onIrEdge() {
   const uint8_t nextHead = static_cast<uint8_t>((edgeHead + 1) % 16);
@@ -78,11 +87,45 @@ void serviceBurst() {
     packetInFlight = true;
   }
 }
+
+void loadSettings() {
+  preferences.begin(kPreferencesNamespace, false);
+  const uint32_t savedId = preferences.getUInt(
+      kTransponderIdKey, idlap_config::kDefaultTransponderId);
+  if (savedId >= IDLAP_ID_MINIMUM && savedId <= IDLAP_ID_MAKSIMUM) {
+    transponderSettings.id = savedId;
+  }
+}
+
+void serviceSerialConfiguration() {
+  while (Serial.available() > 0) {
+    const char character = static_cast<char>(Serial.read());
+    if (character == '\r') continue;
+    if (character != '\n') {
+      if (serialCommandLength + 1 < sizeof(serialCommand)) {
+        serialCommand[serialCommandLength++] = character;
+      }
+      continue;
+    }
+
+    serialCommand[serialCommandLength] = '\0';
+    char response[80] = {};
+    const bool accepted = idLapJalankanPerintah(
+        serialCommand, &transponderSettings, response, sizeof(response));
+    if (accepted && strncmp(serialCommand, "SET ID ", 7) == 0) {
+      preferences.putUInt(kTransponderIdKey, transponderSettings.id);
+    }
+    Serial.println(response);
+    serialCommandLength = 0;
+  }
+}
 }  // namespace
 
 void setup() {
   pinMode(kStatusLedPin, OUTPUT);
   digitalWrite(kStatusLedPin, HIGH);
+  Serial.begin(19200);
+  loadSettings();
   pinMode(kIrInputPin, INPUT_PULLUP);
   bootNonce = static_cast<uint16_t>(esp_random());
   attachInterrupt(digitalPinToInterrupt(kIrInputPin), onIrEdge, CHANGE);
@@ -90,6 +133,7 @@ void setup() {
 }
 
 void loop() {
+  serviceSerialConfiguration();
   bool sendResult = false;
   portENTER_CRITICAL(&sendResultMux);
   sendResult = sendResultPending;
@@ -104,7 +148,7 @@ void loop() {
                          edgeQueue[edgeTail].isHigh};
     edgeTail = static_cast<uint8_t>((edgeTail + 1) % 16);
     if (irTrigger.masukkanTepi(edge.timestampUs, edge.isHigh) &&
-        burstSender.mulaiEvent(idlap_config::kDefaultTransponderId, bootNonce)) {
+        burstSender.mulaiEvent(transponderSettings.id, bootNonce)) {
       statusIndicator.showDetection(millis());
     }
   }

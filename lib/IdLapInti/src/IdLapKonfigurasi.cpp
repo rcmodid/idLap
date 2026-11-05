@@ -35,6 +35,16 @@ bool idLapJalankanPerintah(const char* perintah, IdLapKonfigurasi* pengaturan,
     return false;
   }
   uint32_t nilai = 0;
+  if (angkaSetelahAwalan(perintah, "SET ID ", &nilai)) {
+    if (nilai < IDLAP_ID_MINIMUM || nilai > IDLAP_ID_MAKSIMUM) {
+      jawab(jawaban, ukuranJawaban, "ERR ID_INVALID");
+      return false;
+    }
+    pengaturan->id = nilai;
+    snprintf(jawaban, ukuranJawaban, "OK ID=%lu",
+             static_cast<unsigned long>(pengaturan->id));
+    return true;
+  }
   if (angkaSetelahAwalan(perintah, "ATUR_ID ", &nilai)) {
     if (nilai < IDLAP_ID_MINIMUM || nilai > IDLAP_ID_MAKSIMUM) {
       jawab(jawaban, ukuranJawaban, "ID TIDAK VALID");
@@ -58,7 +68,7 @@ bool idLapJalankanPerintah(const char* perintah, IdLapKonfigurasi* pengaturan,
     return true;
   }
   if (strcmp(perintah, "STATUS") == 0) {
-    snprintf(jawaban, ukuranJawaban, "ID %lu KANAL %u",
+    snprintf(jawaban, ukuranJawaban, "OK ID=%lu CHANNEL=%u",
              static_cast<unsigned long>(pengaturan->id), pengaturan->kanal);
     return true;
   }

@@ -8,7 +8,7 @@ Semua sinyal I/O memakai logika 3,3 V. Jangan menghubungkan output penerima IR
 | Fungsi | GPIO | Perilaku |
 | --- | ---: | --- |
 | OUT penerima IR 38 kHz | 1 | Input interrupt dengan `INPUT_PULLUP`. Penerima IR demodulasi umumnya aktif LOW. VCC penerima harus 3,3 V. |
-| LED status onboard | 8 | Aktif LOW. Mati saat idle; menyala 300 ms saat frame IR valid terdeteksi dan durasinya diperbarui ketika hasil pengiriman ESP-NOW diterima. |
+| LED status onboard | 8 | Aktif LOW. Mati saat idle; menyala 500 ms saat frame IR valid terdeteksi dan durasinya diperbarui ketika hasil pengiriman ESP-NOW diterima. |
 | Buzzer opsional | 3 | Dicadangkan untuk indikator tambahan di masa depan. Gunakan transistor bila beban melebihi kemampuan GPIO. |
 | USB native | 18/19 | Flash dan konfigurasi serial USB. |
 

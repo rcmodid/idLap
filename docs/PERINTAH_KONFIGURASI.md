@@ -1,9 +1,8 @@
 # Kontrak konfigurasi serial idLap
 
-Dokumen ini adalah kontrak untuk implementasi konfigurasi transponder melalui
-USB serial oleh halaman `rcmod.id/idlap`. Firmware saat ini belum memiliki
-parser serial maupun penyimpanan NVS; jangan tampilkan fitur ini sebagai sudah
-aktif sebelum implementasinya selesai.
+Firmware transponder menyediakan konfigurasi melalui USB serial untuk form
+yang sudah ada di halaman `rcmod.id/idlap`. ID disimpan di NVS dan tetap
+berlaku setelah perangkat dinyalakan ulang.
 
 ## Transport
 
