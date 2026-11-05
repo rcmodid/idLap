@@ -1,41 +1,64 @@
 # Prompt untuk Codex di rcmod.id/idlap
 
-Salin prompt berikut ke Codex pada proyek `rcmod.id/idlap`.
+Salin seluruh blok berikut langsung ke Codex pada proyek `rcmod.id/idlap`.
 
 ```text
 Tambahkan form konfigurasi transponder idLap ke halaman `rcmod.id/idlap` yang
-sudah ada melalui Web Serial. Baca
-docs/PINOUT.md dan docs/PERINTAH_KONFIGURASI.md dari repository firmware idLap
-sebagai sumber kebenaran. Jangan membuat koneksi Wi-Fi, access point, pemindaian
-Wi-Fi, atau memasukkan kredensial Wi-Fi.
+sudah ada. Jangan membuat halaman baru, jangan mengubah alur flash yang sudah
+ada, dan jangan membuat koneksi Wi-Fi, access point, pemindaian Wi-Fi, atau
+meminta kredensial Wi-Fi.
 
-Implementasikan UI yang jelas untuk:
-- Menghubungkan dan melepas perangkat dengan navigator.serial.
-- Membuka USB CDC pada 19200 baud, 8N1.
-- Mengirim perintah ASCII yang diakhiri \n, menerima respons per-baris, dan
-  mengabaikan \r dari CRLF.
-- Tombol Refresh yang mengirim STATUS dan menampilkan ID serta channel.
-- Input ID dengan validasi 1 sampai 999999, lalu tombol Simpan ID yang mengirim
-  SET ID <id>. Tampilkan respons OK atau ERR apa adanya kepada pengguna.
-- Input channel dengan validasi 1 sampai 14. Setelah pengguna mengonfirmasi,
-  kirim SET CHANNEL <channel>, tunggu respons OK ... REBOOT_REQUIRED, lalu
-  kirim REBOOT. Jelaskan bahwa sambungan serial akan putus saat restart.
-- Tombol Version yang mengirim VERSION.
+Gunakan Web Serial (`navigator.serial`) untuk mengonfigurasi transponder.
+Tampilkan form ini sebagai bagian dari halaman idLap yang sudah ada:
 
-Klien harus mengirim tepat satu perintah dan menunggu satu respons sebelum
-perintah berikutnya. Tangani perangkat dilepas, port ditolak, timeout respons,
-dan respons ERR tanpa mengubah nilai di UI seolah-olah berhasil. Jangan
-menampilkan konfigurasi serial sebagai tersedia bila perangkat tidak menjawab.
+- Tombol Hubungkan untuk meminta port serial dan membuka USB CDC pada 19200
+  baud, 8N1.
+- Tombol Putuskan koneksi.
+- Tombol Refresh untuk mengirim `STATUS` dan mengisi ID serta channel aktif.
+- Input ID Transponder berupa angka, valid 1 sampai 999999.
+- Tombol Simpan ID yang mengirim `SET ID <id>`.
+- Area status/log ringkas untuk respons perangkat dan kesalahan koneksi.
 
-Gunakan hanya kontrak berikut:
-STATUS -> OK ID=<id> CHANNEL=<channel>
-SET ID <1..999999> -> OK ID=<id>
-SET CHANNEL <1..14> -> OK CHANNEL=<channel> REBOOT_REQUIRED
-REBOOT -> OK REBOOTING
-VERSION -> OK IDLAP=<version>
-input salah -> ERR <reason>
+Aturan transport serial:
+- Kirim teks ASCII/UTF-8 satu perintah per baris, selalu akhiri dengan `\n`.
+- Baca respons satu baris; abaikan `\r` agar CRLF aman.
+- Kirim perintah berikutnya hanya setelah satu respons diterima atau timeout.
+- Jika port dicabut, akses ditolak, timeout, atau respons `ERR`, tampilkan
+  error yang jelas dan jangan mengubah nilai UI seolah penyimpanan berhasil.
 
-Firmware transponder mengimplementasikan parser serial dan menyimpan ID ke
-NVS. Apabila perangkat tidak memberi respons, tampilkan kegagalan koneksi;
-jangan menggunakan fallback Web Bluetooth, Wi-Fi, atau data palsu.
+Kontrak firmware yang sudah tersedia:
+```
+STATUS
+-> OK ID=<id> CHANNEL=<channel>
+
+SET ID <1..999999>
+-> OK ID=<id>
+
+SET ID 0 atau nilai di luar batas
+-> ERR ID_INVALID
+```
+
+Setelah respons `OK ID=<id>`, tampilkan bahwa ID sudah tersimpan. Firmware
+menyimpan ID ke NVS ESP32-C3, sehingga ID tetap ada setelah restart atau cabut
+daya. Jangan membuat fallback Bluetooth, Wi-Fi, data palsu, atau fitur channel,
+version, maupun reboot karena perintah itu belum tersedia di firmware ini.
+
+Pinout perangkat untuk ditampilkan sebagai bantuan wiring:
+- Board: ESP32-C3 SuperMini.
+- Penerima IR 38 kHz OUT: GPIO1, input interrupt dengan INPUT_PULLUP. Output
+  penerima IR harus logika 3,3 V; VCC penerima gunakan 3,3 V, bukan 5 V.
+- LED biru onboard: GPIO8, aktif LOW, mati saat idle dan menyala non-blocking
+  selama 500 ms setelah deteksi frame IR valid atau hasil pengiriman ESP-NOW.
+- Buzzer opsional cadangan: GPIO3. Gunakan transistor bila arus buzzer melebihi
+  kemampuan GPIO.
+- USB native untuk flash dan konfigurasi serial: GPIO18/19.
+
+Transponder bekerja sebagai Wi-Fi station untuk ESP-NOW broadcast dan tidak
+menyiarkan access point Wi-Fi. Form ini hanya untuk pengaturan ID melalui USB.
+
+Gunakan komponen, gaya, pola state, dan notifikasi yang sudah digunakan halaman
+`rcmod.id/idlap`; jangan menambah framework atau dependensi baru kecuali yang
+sudah dipakai proyek. Implementasikan form secara responsif untuk desktop dan
+ponsel, dengan tombol Simpan nonaktif ketika belum tersambung atau ID tidak
+valid.
 ```
