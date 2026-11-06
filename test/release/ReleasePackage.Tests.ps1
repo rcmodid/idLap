@@ -2,6 +2,26 @@ $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 $packageScript = Join-Path $repoRoot "scripts\Package-Release.ps1"
 
 Describe "Package-Release" {
+    It "packages only the selected transponder profile without requiring decoder builds" {
+        $buildRoot = Join-Path $TestDrive "transponder-build"
+        $profileDir = Join-Path $buildRoot "c3_transponder"
+        $outputRoot = Join-Path $TestDrive "transponder-release"
+        $bootApp0Path = Join-Path $TestDrive "transponder-boot_app0.bin"
+        New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
+        foreach ($name in @("bootloader.bin", "partitions.bin", "firmware.bin")) {
+            [System.IO.File]::WriteAllBytes((Join-Path $profileDir $name), [byte[]](1, 2, 3))
+        }
+        [System.IO.File]::WriteAllBytes($bootApp0Path, [byte[]](4, 5, 6))
+
+        & $packageScript -BuildDirectory $buildRoot -BootApp0Path $bootApp0Path -OutputDirectory $outputRoot -Version "v1.0.3" -FirmwareProfiles c3_transponder
+
+        $manifest = Get-Content (Join-Path $outputRoot "manifest.json") -Raw | ConvertFrom-Json
+        @($manifest.firmware).Count | Should Be 1
+        $manifest.firmware[0].id | Should Be "c3_transponder"
+        @(Get-ChildItem -LiteralPath $outputRoot -Filter "*.bin").Count | Should Be 4
+        @(Get-Content (Join-Path $outputRoot "SHA256SUMS")).Count | Should Be 4
+    }
+
     It "creates an ESP Web Tools manifest and SHA-256 checksums for every firmware profile" {
         $buildRoot = Join-Path $TestDrive "build"
         $outputRoot = Join-Path $TestDrive "release"

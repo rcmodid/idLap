@@ -10,7 +10,10 @@ param(
     [string]$OutputDirectory,
 
     [Parameter(Mandatory = $true)]
-    [string]$Version
+    [string]$Version,
+
+    [ValidateSet("c3_transponder", "c3_decoder_minimal", "c3_decoder_w5500", "c3_decoder_lengkap")]
+    [string[]]$FirmwareProfiles = @("c3_transponder", "c3_decoder_minimal", "c3_decoder_w5500", "c3_decoder_lengkap")
 )
 
 $ErrorActionPreference = "Stop"
@@ -20,7 +23,7 @@ $profiles = @(
     @{ id = "c3_decoder_minimal"; name = "IDLap Decoder Minimal"; type = "decoder" },
     @{ id = "c3_decoder_w5500"; name = "IDLap Decoder W5500"; type = "decoder" },
     @{ id = "c3_decoder_lengkap"; name = "IDLap Decoder Lengkap"; type = "decoder" }
-)
+) | Where-Object { $_.id -in $FirmwareProfiles }
 
 $partDefinitions = @(
     @{ source = "bootloader.bin"; suffix = "bootloader"; address = "0x0" },

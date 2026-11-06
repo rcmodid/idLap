@@ -46,11 +46,14 @@ version, maupun reboot karena perintah itu belum tersedia di firmware ini.
 Pinout perangkat untuk ditampilkan sebagai bantuan wiring:
 - Board: ESP32-C3 SuperMini.
 - Penerima IR 38 kHz OUT: GPIO1, input interrupt dengan INPUT_PULLUP. Output
-  penerima IR harus logika 3,3 V; VCC penerima gunakan 3,3 V, bukan 5 V.
+  penerima IR harus logika 3,3 V.
+- GND receiver IR: GPIO2, output LOW setelah firmware berjalan.
+- VCC receiver IR: GPIO3, output HIGH nominal 3,3 V setelah firmware berjalan.
+  Khusus receiver berarus kecil; GPIO2 adalah strapping saat reset. Wiring ini
+  memerlukan firmware GPIO powering, bukan firmware transponder lama.
 - LED biru onboard: GPIO8, aktif LOW, mati saat idle dan menyala non-blocking
   selama 500 ms setelah deteksi frame IR valid atau hasil pengiriman ESP-NOW.
-- Buzzer opsional cadangan: GPIO3. Gunakan transistor bila arus buzzer melebihi
-  kemampuan GPIO.
+- GPIO3 tidak lagi untuk buzzer transponder; pin ini khusus VCC receiver IR.
 - USB native untuk flash dan konfigurasi serial: GPIO18/19.
 
 Transponder bekerja sebagai Wi-Fi station untuk ESP-NOW broadcast dan tidak

@@ -12,7 +12,8 @@ void test_default_transponder_id_is_12110() {
 void test_transponder_pins_match_the_hardware_contract() {
   TEST_ASSERT_EQUAL_UINT8(1, idlap_pins::transponderIrInput);
   TEST_ASSERT_EQUAL_UINT8(8, idlap_pins::transponderStatusLed);
-  TEST_ASSERT_EQUAL_UINT8(3, idlap_pins::transponderBuzzer);
+  TEST_ASSERT_EQUAL_UINT8(2, idlap_pins::transponderIrGround);
+  TEST_ASSERT_EQUAL_UINT8(3, idlap_pins::transponderIrVcc);
 }
 
 void test_status_led_is_on_for_500_ms_after_detection() {

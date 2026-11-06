@@ -38,12 +38,9 @@ jobs:
       - name: Install PlatformIO
         run: pip install platformio
 
-      - name: Build all ESP32-C3 firmware profiles
+      - name: Build ESP32-C3 transponder firmware
         run: |
           pio run -e c3_transponder
-          pio run -e c3_decoder_minimal
-          pio run -e c3_decoder_w5500
-          pio run -e c3_decoder_lengkap
 
       - name: Package release assets
         shell: pwsh
@@ -52,7 +49,8 @@ jobs:
             -BuildDirectory .pio/build `
             -BootApp0Path "$HOME/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin" `
             -OutputDirectory dist `
-            -Version "${{ steps.version.outputs.value }}"
+            -Version "${{ steps.version.outputs.value }}" `
+            -FirmwareProfiles c3_transponder
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2

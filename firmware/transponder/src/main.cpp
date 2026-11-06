@@ -12,6 +12,7 @@
 #include <IdLapKonfigurasi.h>
 #include <IdLapPinout.h>
 #include <IdLapPemicuIr.h>
+#include <IdLapReceiverPower.h>
 
 namespace {
 constexpr uint8_t kIrInputPin = idlap_pins::transponderIrInput;
@@ -122,11 +123,14 @@ void serviceSerialConfiguration() {
 }  // namespace
 
 void setup() {
+  idLapInitializeReceiverPins(
+      [](uint8_t pin, bool high) { digitalWrite(pin, high ? HIGH : LOW); },
+      [](uint8_t pin) { pinMode(pin, OUTPUT); },
+      [](uint8_t pin) { pinMode(pin, INPUT_PULLUP); });
   pinMode(kStatusLedPin, OUTPUT);
   digitalWrite(kStatusLedPin, HIGH);
   Serial.begin(19200);
   loadSettings();
-  pinMode(kIrInputPin, INPUT_PULLUP);
   bootNonce = static_cast<uint16_t>(esp_random());
   attachInterrupt(digitalPinToInterrupt(kIrInputPin), onIrEdge, CHANGE);
   startRadio();

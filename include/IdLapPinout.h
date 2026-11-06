@@ -3,12 +3,14 @@
 #include <stdint.h>
 
 // Pinout standar idLap untuk ESP32-C3 SuperMini.
-// GPIO2 dan GPIO9 adalah strapping; GPIO12..17 untuk flash; GPIO18/19
-// dipertahankan untuk USB native. GPIO8 khusus untuk LED biru onboard.
+// GPIO2 adalah strapping saat reset, lalu menjadi GND receiver transponder.
+// GPIO9 tetap untuk boot; GPIO12..17 untuk flash; GPIO18/19 untuk USB native.
+// GPIO8 khusus untuk LED biru onboard.
 namespace idlap_pins {
 constexpr uint8_t transponderIrInput = 1;
+constexpr uint8_t transponderIrGround = 2;
+constexpr uint8_t transponderIrVcc = 3;
 constexpr uint8_t transponderStatusLed = 8;
-constexpr uint8_t transponderBuzzer = 3;
 
 constexpr uint8_t decoderIrOutput = 0;
 constexpr uint8_t decoderDetectionLed = 1;
