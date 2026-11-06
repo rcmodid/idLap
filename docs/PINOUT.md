@@ -48,7 +48,7 @@ menjalankan pemindaian Wi-Fi.
 LED biru onboard, LED gate, dan buzzer didukung oleh semua varian decoder.
 Hanya paket radio valid yang bukan duplikat burst yang memicu indikator.
 
-## Decoder W5500 dan lengkap
+## Decoder USB + OLED + W5500
 
 | Fungsi | GPIO |
 | --- | ---: |

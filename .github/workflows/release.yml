@@ -41,7 +41,7 @@ jobs:
       - name: Build all three ESP32-C3 decoder variants
         run: |
           pio run -e c3_decoder_minimal
-          pio run -e c3_decoder_w5500
+          pio run -e c3_decoder_oled
           pio run -e c3_decoder_lengkap
 
       - name: Package release assets
@@ -52,7 +52,7 @@ jobs:
             -BootApp0Path "$HOME/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin" `
             -OutputDirectory dist `
             -Version "${{ steps.version.outputs.value }}" `
-            -FirmwareProfiles @('c3_decoder_minimal', 'c3_decoder_w5500', 'c3_decoder_lengkap')
+            -FirmwareProfiles @('c3_decoder_minimal', 'c3_decoder_oled', 'c3_decoder_lengkap')
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2

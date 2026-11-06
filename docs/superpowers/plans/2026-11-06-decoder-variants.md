@@ -21,3 +21,7 @@ Hardware assumptions: active buzzer or active-HIGH transistor driver; SSD1306
 128x64 I2C at 0x3c/0x3d. Bench validation of voltage, sound, optical coverage,
 Ethernet throughput and display hardware is unavailable and must be disclosed.
 Existing transponder release is retained; this request does not authorize deleting it.
+
+## Corrected variant matrix (user request)
+
+Release v1.1.1 contains Decoder USB, Decoder USB + OLED, and Decoder USB + OLED + W5500. Replace the W5500-only build with c3_decoder_oled. OLED without Ethernet shows USB status; Ethernet OLED shows IP, WS :81, ZRound :5000, PIN and detections. Keep the common detection indicators. Update packaging, CI, website pinout/copy and binary-download allowlist. Build all targets and run native, release packaging and website tests before publishing; verify uploaded hashes and real download endpoint. Retire the superseded v1.1.0 decoder release after the corrected release is verified, retaining its tag and transponder v1.0.3.

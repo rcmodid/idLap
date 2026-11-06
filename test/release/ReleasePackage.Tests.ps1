@@ -6,7 +6,7 @@ Describe "Package-Release" {
         $buildRoot = Join-Path $TestDrive "decoder-build"
         $outputRoot = Join-Path $TestDrive "decoder-release"
         $bootApp0Path = Join-Path $TestDrive "decoder-boot_app0.bin"
-        $decoderProfiles = @("c3_decoder_minimal", "c3_decoder_w5500", "c3_decoder_lengkap")
+        $decoderProfiles = @("c3_decoder_minimal", "c3_decoder_oled", "c3_decoder_lengkap")
         foreach ($profile in $decoderProfiles) {
             $directory = Join-Path $buildRoot $profile
             New-Item -ItemType Directory -Path $directory -Force | Out-Null
@@ -19,7 +19,7 @@ Describe "Package-Release" {
         $manifest = Get-Content (Join-Path $outputRoot "manifest.json") -Raw | ConvertFrom-Json
         @($manifest.firmware).Count | Should Be 3
         @($manifest.firmware | Where-Object { $_.type -ne "decoder" }).Count | Should Be 0
-        ($manifest.firmware.id -join ",") | Should Be "c3_decoder_minimal,c3_decoder_w5500,c3_decoder_lengkap"
+        ($manifest.firmware.id -join ",") | Should Be "c3_decoder_minimal,c3_decoder_oled,c3_decoder_lengkap"
         @(Get-ChildItem -LiteralPath $outputRoot -Filter "*.bin").Count | Should Be 12
         @(Get-ChildItem -LiteralPath $outputRoot -Filter "*transponder*").Count | Should Be 0
         @(Get-Content (Join-Path $outputRoot "SHA256SUMS")).Count | Should Be 12
@@ -52,7 +52,7 @@ Describe "Package-Release" {
         $profiles = @(
             "c3_transponder",
             "c3_decoder_minimal",
-            "c3_decoder_w5500",
+            "c3_decoder_oled",
             "c3_decoder_lengkap"
         )
 

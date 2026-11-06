@@ -21,8 +21,8 @@ atau modul driver dengan masukan aktif HIGH, bukan piezo pasif yang perlu nada P
 ## Varian firmware
 
 - `c3_decoder_minimal`: USB CDC native, ZRound Protocol pada 19200 8N1.
-- `c3_decoder_w5500`: USB yang sama + W5500 Ethernet (DHCP), WebSocket dan TCP.
-- `c3_decoder_lengkap`: semua fitur W5500 + layar SSD1306 I2C 128×64.
+- `c3_decoder_oled`: Decoder USB + OLED SSD1306 I2C 0,96 inci 128x64, tanpa Ethernet.
+- `c3_decoder_lengkap`: Decoder USB + OLED + W5500 (DHCP), WebSocket dan TCP.
 
 ### USB dan Ethernet
 
@@ -59,3 +59,5 @@ ketika melakukan validasi lintasan.
 
 Build dan tes software tidak menggantikan validasi hardware: uji boot, polaritas
 LED, suara buzzer, cakupan IR, DHCP, koneksi browser/TCP, dan OLED sebelum balapan.
+
+Pilihan firmware: **Decoder USB**, **Decoder USB + OLED**, dan **Decoder USB + OLED + W5500**. Pada varian lengkap, OLED menampilkan IP, WebSocket `:81`, ZRound `:5000`, PIN, ID terakhir, dan jumlah deteksi. Varian USB + OLED menampilkan status USB, ID terakhir, dan jumlah deteksi tanpa pesan DHCP.

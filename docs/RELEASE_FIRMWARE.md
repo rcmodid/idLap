@@ -16,7 +16,7 @@ berikut ke GitHub Release:
 - empat bagian `.bin` untuk setiap profil: bootloader, partition table,
   `boot_app0`, dan firmware aplikasi.
 
-Varian rilis decoder: `c3_decoder_minimal`, `c3_decoder_w5500`, dan
+Varian rilis decoder: `c3_decoder_minimal`, `c3_decoder_oled`, dan
 `c3_decoder_lengkap`. Firmware transponder tetap merupakan profil terpisah dan
 dapat dipaketkan lewat `-FirmwareProfiles c3_transponder` bila diperlukan.
 Untuk memilih profil lain, gunakan parameter array `-FirmwareProfiles` pada

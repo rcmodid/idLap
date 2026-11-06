@@ -12,17 +12,17 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$Version,
 
-    [ValidateSet("c3_transponder", "c3_decoder_minimal", "c3_decoder_w5500", "c3_decoder_lengkap")]
-    [string[]]$FirmwareProfiles = @("c3_transponder", "c3_decoder_minimal", "c3_decoder_w5500", "c3_decoder_lengkap")
+    [ValidateSet("c3_transponder", "c3_decoder_minimal", "c3_decoder_oled", "c3_decoder_lengkap")]
+    [string[]]$FirmwareProfiles = @("c3_transponder", "c3_decoder_minimal", "c3_decoder_oled", "c3_decoder_lengkap")
 )
 
 $ErrorActionPreference = "Stop"
 
 $profiles = @(
     @{ id = "c3_transponder"; name = "IDLap Transponder"; type = "transponder" },
-    @{ id = "c3_decoder_minimal"; name = "idLap Decoder USB"; type = "decoder" },
-    @{ id = "c3_decoder_w5500"; name = "idLap Decoder W5500"; type = "decoder" },
-    @{ id = "c3_decoder_lengkap"; name = "idLap Decoder W5500 + OLED"; type = "decoder" }
+    @{ id = "c3_decoder_minimal"; name = "Decoder USB"; type = "decoder" },
+    @{ id = "c3_decoder_oled"; name = "Decoder USB + OLED"; type = "decoder" },
+    @{ id = "c3_decoder_lengkap"; name = "Decoder USB + OLED + W5500"; type = "decoder" }
 ) | Where-Object { $_.id -in $FirmwareProfiles }
 
 $partDefinitions = @(

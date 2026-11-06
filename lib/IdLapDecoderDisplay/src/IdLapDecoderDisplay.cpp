@@ -65,11 +65,18 @@ void displayWorker(void* argument) {
     display.clearDisplay();
     display.setCursor(0, 0);
     display.println(F("idLapDecoder"));
+#if IDLAP_AKTIF_W5500
     display.println(current.networkReady ? F("Ethernet ready")
                                          : F("DHCP waiting"));
     display.println(current.ip[0] ? current.ip : "0.0.0.0");
-    display.println(F("WS :81"));
+    display.println(F("WS:81 ZRound:5000"));
     display.println(F("PIN 99999"));
+#else
+    display.println(F("USB timing"));
+    display.println(F("19200 baud"));
+    display.println();
+    display.println();
+#endif
     display.print(F("Last: "));
     display.println(current.lastTransponderId);
     display.print(F("Count: "));
