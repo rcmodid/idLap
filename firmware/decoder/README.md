@@ -44,12 +44,34 @@ dan fungsi deteksi tetap berjalan. Clock tidak disinkronkan ke internet/NTP.
 - Browser dapat memerlukan izin akses jaringan lokal. Pembatasan mixed content
   atau akses LAN bergantung pada browser dan kebijakannya.
 
-### OLED (varian lengkap)
+### OLED race display (dua varian OLED)
 
-SDA=GPIO20, SCL=GPIO21; VCC dan pull-up I2C=3,3 V. SSD1306 128×64 pada alamat
-0x3C atau 0x3D dideteksi otomatis. Layar menampilkan status Ethernet, IP, port
-WebSocket, PIN pairing, ID terakhir dan jumlah deteksi. OLED bersifat opsional;
-pasang sebelum boot. OLED yang tidak ditemukan tidak menghentikan decoder.
+SSD1306 I2C 0,96 inci 128x64: SDA=GPIO20, SCL=GPIO21; VCC dan pull-up 3,3 V.
+Alamat 0x3C / 0x3D dideteksi saat boot. OLED yang tidak ditemukan tidak menghentikan decoder.
+
+- Header `idLap Decoder` dan versi firmware; ID terakhir ditulis besar, rata tengah,
+  minimal lima digit dengan nol di depan (ID 123 menjadi 00123).
+- Setiap paket **valid dan bukan duplikat** memicu invert selama **500 ms**:
+  angka hitam di latar putih, kemudian putih di latar hitam. ID tetap tampil
+  sampai ada deteksi valid berikutnya; tidak ada waktu tunggu antarevent.
+- `DT` adalah selang waktu antara dua deteksi valid terakhir, berdasarkan
+  waktu penerimaan radio (bukan lama render OLED). Deteksi pertama menampilkan `--.---s`.
+  Ini selang antarevent global, bukan penghitungan lap per mobil.
+- Nilai RSSI dalam dBm dan lima bar berasal dari paket yang diterima.
+  Pada toolchain ESP-IDF 4, metadata management-frame dicocokkan dengan MAC,
+  payload lengkap dan waktu penerimaan dalam jendela 500 mikrodetik. RSSI
+  yang tidak dapat dicocokkan ditampilkan `--`, tanpa menebak nilai sinyal.
+- Varian **USB + OLED + W5500** menampilkan IP (atau status DHCP),
+  `WS:81 Z:5000 P:99999`: WebSocket port 81, ZRound port 5000, PIN WebSocket 99999.
+- Varian **USB + OLED** menampilkan status USB, tanpa informasi Ethernet.
+
+Worker OLED memakai I2C 400 kHz, timeout transaksi 20 ms, dan jeda worker 50 ms
+setelah transfer. Antrean hanya satu snapshot: saat banyak transponder datang,
+layar menampilkan ID valid terbaru dan dapat melewati tampilan ID perantara;
+semua event tetap diproses jalur timing. Efek invert tidak memakai delay 500 ms.
+Batas 500 ms memakai clock event; perubahan fisik layar mengikuti cadence worker
+(jeda 50 ms + waktu transfer). Layar ini menampilkan telemetri, bukan jaminan
+semua ID sempat terlihat mata saat event datang sangat rapat.
 
 RMT menjaga bentuk gelombang IR di hardware. Ethernet/DHCP dan OLED berjalan
 di worker terpisah dengan antrean terbatas agar tidak menunggu di jalur deteksi.
@@ -60,4 +82,4 @@ ketika melakukan validasi lintasan.
 Build dan tes software tidak menggantikan validasi hardware: uji boot, polaritas
 LED, suara buzzer, cakupan IR, DHCP, koneksi browser/TCP, dan OLED sebelum balapan.
 
-Pilihan firmware: **Decoder USB**, **Decoder USB + OLED**, dan **Decoder USB + OLED + W5500**. Pada varian lengkap, OLED menampilkan IP, WebSocket `:81`, ZRound `:5000`, PIN, ID terakhir, dan jumlah deteksi. Varian USB + OLED menampilkan status USB, ID terakhir, dan jumlah deteksi tanpa pesan DHCP.
+Pilihan firmware: **Decoder USB**, **Decoder USB + OLED**, dan **Decoder USB + OLED + W5500**. Pada varian lengkap, OLED menampilkan IP, WebSocket `:81`, ZRound `:5000`, PIN, ID terakhir, interval deteksi, dan RSSI. Varian USB + OLED menampilkan status USB, ID terakhir, interval deteksi, dan RSSI tanpa pesan DHCP.

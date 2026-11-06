@@ -4,6 +4,7 @@
 
 #include <Arduino.h>
 #include <Adafruit_SSD1306.h>
+#include <Fonts/FreeSansBold18pt7b.h>
 #include <Wire.h>
 #include <atomic>
 #include <freertos/FreeRTOS.h>
@@ -11,13 +12,13 @@
 #include <freertos/task.h>
 
 #include "IdLapPinout.h"
+#include "IdLapVersion.h"
 
 namespace {
 struct Snapshot {
   char ip[16];
   bool networkReady;
-  uint32_t lastTransponderId;
-  uint32_t detectionCount;
+  IdLapDisplayState state;
 };
 
 std::atomic<QueueHandle_t> snapshots{nullptr};
@@ -29,12 +30,65 @@ bool acknowledges(uint8_t address) {
   return Wire.endTransmission() == 0;
 }
 
+void drawRaceDisplay(Adafruit_SSD1306& display, const Snapshot& current,
+                     const IdLapDisplayView& view) {
+  display.clearDisplay();
+  display.setFont(nullptr);
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.print(F("idLap Decoder"));
+  display.setCursor(92, 0);
+  display.print(F("v" IDLAP_FIRMWARE_VERSION));
+  display.drawFastHLine(0, 10, 128, SSD1306_WHITE);
+
+  char id[12];
+  if (view.hasDetection) snprintf(id, sizeof(id), "%05lu", static_cast<unsigned long>(view.id));
+  else snprintf(id, sizeof(id), "-----");
+  display.setFont(&FreeSansBold18pt7b);
+  int16_t x, y;
+  uint16_t width, height;
+  display.getTextBounds(id, 0, 0, &x, &y, &width, &height);
+  display.setCursor((128 - static_cast<int16_t>(width)) / 2 - x, 36);
+  display.print(id);
+  display.setFont(nullptr);
+
+  char interval[16];
+  idLapDisplayInterval(view, interval, sizeof(interval));
+  display.setCursor(0, 39);
+  display.print(interval);
+  display.setCursor(76, 39);
+  if (view.rssi == 127) display.print(F(" --"));
+  else display.print(view.rssi);
+  const uint8_t bars = idLapDisplayRssiBars(view.rssi);
+  for (uint8_t i = 0; i < 5; ++i) {
+    const uint8_t height = 2 + i * 2;
+    const uint8_t left = 103 + i * 5;
+    if (i < bars) display.fillRect(left, 47 - height, 3, height, SSD1306_WHITE);
+    else display.drawRect(left, 47 - height, 3, height, SSD1306_WHITE);
+  }
+  display.drawFastHLine(0, 48, 128, SSD1306_WHITE);
+#if IDLAP_AKTIF_W5500
+  display.setCursor(0, 49);
+  if (current.networkReady) {
+    display.print(F("IP "));
+    display.print(current.ip);
+  } else display.print(F("LAN: waiting DHCP"));
+  display.setCursor(0, 57);
+  display.print(F("WS:81 Z:5000 P:99999"));
+#else
+  display.setCursor(0, 52);
+  display.print(F("USB 19200  #"));
+  display.print(view.count);
+#endif
+}
+
 void displayWorker(void* argument) {
   const QueueHandle_t queue = static_cast<QueueHandle_t>(argument);
   // Only this task touches Wire or the display. No Serial output: USB carries
   // the decoder data stream. Limit each I2C transaction even on a stuck bus.
   Wire.setTimeOut(20);
-  if (!Wire.begin(idlap_pins::oledSda, idlap_pins::oledScl, 100000)) {
+  if (!Wire.begin(idlap_pins::oledSda, idlap_pins::oledScl, 400000)) {
     vTaskDelete(nullptr);
     return;
   }
@@ -44,7 +98,7 @@ void displayWorker(void* argument) {
   else if (acknowledges(0x3D)) address = 0x3D;
 
   // Static lifetime avoids putting the framebuffer owner on the task stack.
-  static Adafruit_SSD1306 display(128, 64, &Wire, -1);
+  static Adafruit_SSD1306 display(128, 64, &Wire, -1, 400000, 400000);
   // periphBegin=false preserves GPIO20/21 instead of starting default Wire pins.
   if (address == 0 ||
       !display.begin(SSD1306_SWITCHCAPVCC, address, false, false)) {
@@ -54,6 +108,8 @@ void displayWorker(void* argument) {
   }
 
   Snapshot current{};
+  bool wasInverted = false;
+  display.invertDisplay(false);
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
   display.setTextWrap(false);
@@ -62,30 +118,16 @@ void displayWorker(void* argument) {
     // a backlog. A disconnected panel disables only this optional worker.
     xQueueReceive(queue, &current, 0);
     if (!acknowledges(address)) break;
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    display.println(F("idLapDecoder"));
-#if IDLAP_AKTIF_W5500
-    display.println(current.networkReady ? F("Ethernet ready")
-                                         : F("DHCP waiting"));
-    display.println(current.ip[0] ? current.ip : "0.0.0.0");
-    display.println(F("WS:81 ZRound:5000"));
-    display.println(F("PIN 99999"));
-#else
-    display.println(F("USB timing"));
-    display.println(F("19200 baud"));
-    display.println();
-    display.println();
-#endif
-    display.print(F("Last: "));
-    display.println(current.lastTransponderId);
-    display.print(F("Count: "));
-    display.println(current.detectionCount);
+    const IdLapDisplayView view = current.state.view(millis());
+    drawRaceDisplay(display, current, view);
     display.display();
+    // Inversion uses the event clock, never delay(500). A fresh event replaces
+    // the screen immediately; only this optional worker waits on the I2C bus.
+    const bool inverted = current.state.view(millis()).inverted;
+    if (inverted != wasInverted) display.invertDisplay(inverted);
+    wasInverted = inverted;
     ready.store(true);
-    // Delay after the transfer, rather than catching up missed periods: even
-    // a slow or stalled transfer cannot cause a burst above four refreshes/s.
-    vTaskDelay(pdMS_TO_TICKS(250));
+    vTaskDelay(pdMS_TO_TICKS(50));
   }
   ready.store(false);
   Wire.end();
@@ -112,7 +154,7 @@ void idLapDisplayBegin() {
 }
 
 void idLapDisplayUpdate(const char* ip, bool networkReady,
-                        uint32_t lastTransponderId, uint32_t detectionCount) {
+                        const IdLapDisplayState& state) {
   const QueueHandle_t queue = snapshots.load();
   if (queue == nullptr) return;
   Snapshot latest{};
@@ -121,8 +163,7 @@ void idLapDisplayUpdate(const char* ip, bool networkReady,
       latest.ip[i] = ip[i];
   }
   latest.networkReady = networkReady;
-  latest.lastTransponderId = lastTransponderId;
-  latest.detectionCount = detectionCount;
+  latest.state = state;
   xQueueOverwrite(queue, &latest);
 }
 

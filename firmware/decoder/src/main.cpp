@@ -13,6 +13,7 @@
 #include <IdLapDecoderProtocol.h>
 #include <IdLapDecoderNetwork.h>
 #include <IdLapDecoderDisplay.h>
+#include <IdLapRadioRssi.h>
 #include <IdLapFrameIr.h>
 #include <IdLapPaket.h>
 #include <IdLapPinout.h>
@@ -24,6 +25,8 @@ constexpr int64_t kFramePeriodUs = 20000;
 constexpr rmt_channel_t kIrChannel = RMT_CHANNEL_0;
 struct IncomingPacket {
   uint8_t data[IDLAP_UKURAN_PAKET];
+  uint8_t sender[6];
+  int16_t rssi;
   uint32_t driverTimestampUs;
   int64_t fallbackTimestampUs;
 };
@@ -31,6 +34,23 @@ QueueHandle_t radioQueue = nullptr;
 std::atomic<uint32_t> radioDrops{0};
 IdLapDecoder decoder;
 IdLapDecoderProtocol serialProtocol;
+IdLapDisplayState displayState;
+#if IDLAP_AKTIF_OLED && ESP_IDF_VERSION_MAJOR < 5
+IdLapRadioRssi radioRssi;
+portMUX_TYPE radioRssiMux = portMUX_INITIALIZER_UNLOCKED;
+
+void onRadioMetadata(void* buffer, wifi_promiscuous_pkt_type_t type) {
+  if (!buffer || type != WIFI_PKT_MGMT) return;
+  const auto* packet = static_cast<const wifi_promiscuous_pkt_t*>(buffer);
+  if (packet->rx_ctrl.rx_state != 0) return;
+  const int64_t nowUs = esp_timer_get_time();
+  // Fixed copy only: no allocation, Serial, I2C, or packet acceptance here.
+  portENTER_CRITICAL(&radioRssiMux);
+  radioRssi.capture(packet->payload, packet->rx_ctrl.sig_len,
+                    packet->rx_ctrl.rssi, nowUs);
+  portEXIT_CRITICAL(&radioRssiMux);
+}
+#endif
 rmt_item32_t irItems[5] = {};
 bool irReady = false;
 int64_t nextIrFrameUs = 0;
@@ -60,10 +80,13 @@ void beginIr() {
             rmt_driver_install(kIrChannel, 0, 0) == ESP_OK;
 }
 
-void queuePacket(const uint8_t* data, int size, uint32_t driverTimestampUs) {
+void queuePacket(const uint8_t* sender, const uint8_t* data, int size,
+                  uint32_t driverTimestampUs, int16_t rssi) {
   if (data == nullptr || size != IDLAP_UKURAN_PAKET || radioQueue == nullptr) return;
   IncomingPacket packet = {};
   memcpy(packet.data, data, sizeof(packet.data));
+  if (sender) memcpy(packet.sender, sender, sizeof(packet.sender));
+  packet.rssi = rssi;
   packet.driverTimestampUs = driverTimestampUs;
   packet.fallbackTimestampUs = esp_timer_get_time();
   if (xQueueSend(radioQueue, &packet, 0) != pdTRUE) radioDrops.fetch_add(1);
@@ -71,11 +94,13 @@ void queuePacket(const uint8_t* data, int size, uint32_t driverTimestampUs) {
 
 #if ESP_IDF_VERSION_MAJOR >= 5
 void onReceive(const esp_now_recv_info_t* info, const uint8_t* data, int size) {
-  queuePacket(data, size, info && info->rx_ctrl ? info->rx_ctrl->timestamp : 0);
+  queuePacket(info ? info->src_addr : nullptr, data, size,
+              info && info->rx_ctrl ? info->rx_ctrl->timestamp : 0,
+              info && info->rx_ctrl ? info->rx_ctrl->rssi : 127);
 }
 #else
-void onReceive(const uint8_t*, const uint8_t* data, int size) {
-  queuePacket(data, size, 0);
+void onReceive(const uint8_t* sender, const uint8_t* data, int size) {
+  queuePacket(sender, data, size, 0, 127);
 }
 #endif
 
@@ -84,6 +109,14 @@ void beginRadio() {
   esp_wifi_set_ps(WIFI_PS_NONE);
   esp_wifi_set_channel(kRadioChannel, WIFI_SECOND_CHAN_NONE);
   if (esp_now_init() == ESP_OK) esp_now_register_recv_cb(onReceive);
+#if IDLAP_AKTIF_OLED && ESP_IDF_VERSION_MAJOR < 5
+  wifi_promiscuous_filter_t filter = {};
+  filter.filter_mask = WIFI_PROMIS_FILTER_MASK_MGMT;
+  if (esp_wifi_set_promiscuous_filter(&filter) == ESP_OK &&
+      esp_wifi_set_promiscuous_rx_cb(onRadioMetadata) == ESP_OK) {
+    esp_wifi_set_promiscuous(true);
+  }
+#endif
 }
 
 void serialFrame(const char* frame) {
@@ -121,6 +154,7 @@ void setup() {
 }
 
 void loop() {
+  bool displayDirty = false;
   const int64_t nowUs = esp_timer_get_time();
   if (irReady && nowUs >= nextIrFrameUs &&
       rmt_wait_tx_done(kIrChannel, 0) == ESP_OK) {
@@ -139,8 +173,20 @@ void loop() {
                           millis(), &event)) continue;
     serialFrame(event.frame);
     idLapNetworkPublish(event.frame);
+    int16_t rssi = incoming.rssi;
+#if IDLAP_AKTIF_OLED && ESP_IDF_VERSION_MAJOR < 5
+    portENTER_CRITICAL(&radioRssiMux);
+    rssi = radioRssi.find(incoming.sender, incoming.data,
+                          sizeof(incoming.data), incoming.fallbackTimestampUs);
+    portEXIT_CRITICAL(&radioRssiMux);
+#endif
+    displayState.accept(event.id, timestampUs, millis(), rssi);
+    displayDirty = true;
   }
   const uint32_t nowMs = millis();
+  // Latch expiration in the producer as well as the worker's snapshot, so an
+  // idle device never restarts a stale flash after the full millis() cycle.
+  displayState.view(nowMs);
   const IdLapDecoderOutputs outputs = decoder.outputs(nowMs);
   digitalWrite(idlap_pins::decoderStatusLed, outputs.blueLed ? LOW : HIGH);
   digitalWrite(idlap_pins::decoderDetectionLed, outputs.gateLed ? HIGH : LOW);
@@ -153,12 +199,11 @@ void loop() {
     serialFrame(frame);
     idLapNetworkPublish(frame);
   }
-  if (static_cast<uint32_t>(nowMs - displayUpdatedAtMs) >= 250) {
+  if (displayDirty || static_cast<uint32_t>(nowMs - displayUpdatedAtMs) >= 100) {
     displayUpdatedAtMs = nowMs;
     char ip[16];
     idLapNetworkAddress(ip, sizeof(ip));
-    idLapDisplayUpdate(ip, idLapNetworkReady(), decoder.lastId(),
-                       decoder.detectionCount());
+    idLapDisplayUpdate(ip, idLapNetworkReady(), displayState);
   }
   // Yield to networking/display and idle housekeeping; RMT keeps IR timing.
   delay(1);
