@@ -8,13 +8,19 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-Workflow GitHub Actions membangun empat profil ESP32-C3 dan mengunggah asset
+Workflow GitHub Actions membangun tiga varian decoder ESP32-C3 dan mengunggah asset
 berikut ke GitHub Release:
 
 - `manifest.json`: daftar firmware, tipe perangkat, chip, dan bagian flash.
 - `SHA256SUMS`: hash SHA-256 untuk setiap berkas `.bin`.
 - empat bagian `.bin` untuk setiap profil: bootloader, partition table,
   `boot_app0`, dan firmware aplikasi.
+
+Varian rilis decoder: `c3_decoder_minimal`, `c3_decoder_w5500`, dan
+`c3_decoder_lengkap`. Firmware transponder tetap merupakan profil terpisah dan
+dapat dipaketkan lewat `-FirmwareProfiles c3_transponder` bila diperlukan.
+Untuk memilih profil lain, gunakan parameter array `-FirmwareProfiles` pada
+`scripts/Package-Release.ps1`. Publikasi decoder tidak menghapus rilis transponder.
 
 `boot_app0.bin` merupakan asset framework Arduino-ESP32, bukan output build
 per profil. Workflow mengambilnya dari paket PlatformIO lalu memasukkannya ke

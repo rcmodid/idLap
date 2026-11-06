@@ -12,3 +12,6 @@ GPIO3 tidak lagi untuk buzzer. Gunakan receiver IR 3,3 V berarus kecil.
 GPIO2 merupakan strapping pin saat reset; suplai receiver baru aktif dari
 `setup()`, bukan selama reset atau bootloader. Detail dan referensi komponen:
 [PINOUT.md](../../docs/PINOUT.md).
+
+ID baru dibatasi 1–99999 (maksimal lima digit). ID enam digit yang sudah ada
+tetap dapat dibaca agar bisa diganti lewat USB tanpa mereset identitas otomatis.

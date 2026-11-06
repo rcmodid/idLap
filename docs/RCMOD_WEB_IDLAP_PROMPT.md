@@ -15,7 +15,7 @@ Tampilkan form ini sebagai bagian dari halaman idLap yang sudah ada:
   baud, 8N1.
 - Tombol Putuskan koneksi.
 - Tombol Refresh untuk mengirim `STATUS` dan mengisi ID serta channel aktif.
-- Input ID Transponder berupa angka, valid 1 sampai 999999.
+- Input ID Transponder berupa angka, valid 1 sampai 99999, maksimal 5 digit.
 - Tombol Simpan ID yang mengirim `SET ID <id>`.
 - Area status/log ringkas untuk respons perangkat dan kesalahan koneksi.
 
@@ -31,7 +31,7 @@ Kontrak firmware yang sudah tersedia:
 STATUS
 -> OK ID=<id> CHANNEL=<channel>
 
-SET ID <1..999999>
+SET ID <1..99999>
 -> OK ID=<id>
 
 SET ID 0 atau nilai di luar batas

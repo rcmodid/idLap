@@ -39,10 +39,14 @@ menjalankan pemindaian Wi-Fi.
 
 | Fungsi | GPIO | Catatan |
 | --- | ---: | --- |
-| Pemancar IR 38 kHz | 0 | Ke transistor driver LED IR; jangan langsung menggerakkan LED IR berdaya tinggi. |
-| LED deteksi | 1 | Output aktif HIGH, pulsa awal 50 ms. |
-| Buzzer opsional | 3 | Gunakan transistor bila buzzer melebihi kemampuan GPIO. |
+| Pemancar IR 38 kHz | 0 | RMT mengirim frame gate setiap 20 ms. Gunakan driver LED IR. |
+| LED biru onboard | 8 | Aktif LOW, menyala 500 ms saat transponder valid terdeteksi. |
+| LED deteksi / LED gate | 1 | Output aktif HIGH selama 500 ms setelah deteksi valid. Gunakan resistor/driver sesuai beban. |
+| Buzzer aktif opsional | 3 | Output aktif HIGH selama 80 ms setelah deteksi valid, di semua varian. Gunakan transistor bila buzzer melebihi kemampuan GPIO. |
 | USB native | 18/19 | ZRound USB dan flash. |
+
+LED biru onboard, LED gate, dan buzzer didukung oleh semua varian decoder.
+Hanya paket radio valid yang bukan duplikat burst yang memicu indikator.
 
 ## Decoder W5500 dan lengkap
 

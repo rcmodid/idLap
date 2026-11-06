@@ -2,6 +2,29 @@ $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 $packageScript = Join-Path $repoRoot "scripts\Package-Release.ps1"
 
 Describe "Package-Release" {
+    It "packages all three decoder variants without transponder assets" {
+        $buildRoot = Join-Path $TestDrive "decoder-build"
+        $outputRoot = Join-Path $TestDrive "decoder-release"
+        $bootApp0Path = Join-Path $TestDrive "decoder-boot_app0.bin"
+        $decoderProfiles = @("c3_decoder_minimal", "c3_decoder_w5500", "c3_decoder_lengkap")
+        foreach ($profile in $decoderProfiles) {
+            $directory = Join-Path $buildRoot $profile
+            New-Item -ItemType Directory -Path $directory -Force | Out-Null
+            foreach ($name in @("bootloader.bin", "partitions.bin", "firmware.bin")) {
+                [System.IO.File]::WriteAllBytes((Join-Path $directory $name), [byte[]](1, 2, 3))
+            }
+        }
+        [System.IO.File]::WriteAllBytes($bootApp0Path, [byte[]](4, 5, 6))
+        & $packageScript -BuildDirectory $buildRoot -BootApp0Path $bootApp0Path -OutputDirectory $outputRoot -Version "v1.1.0" -FirmwareProfiles $decoderProfiles
+        $manifest = Get-Content (Join-Path $outputRoot "manifest.json") -Raw | ConvertFrom-Json
+        @($manifest.firmware).Count | Should Be 3
+        @($manifest.firmware | Where-Object { $_.type -ne "decoder" }).Count | Should Be 0
+        ($manifest.firmware.id -join ",") | Should Be "c3_decoder_minimal,c3_decoder_w5500,c3_decoder_lengkap"
+        @(Get-ChildItem -LiteralPath $outputRoot -Filter "*.bin").Count | Should Be 12
+        @(Get-ChildItem -LiteralPath $outputRoot -Filter "*transponder*").Count | Should Be 0
+        @(Get-Content (Join-Path $outputRoot "SHA256SUMS")).Count | Should Be 12
+    }
+
     It "packages only the selected transponder profile without requiring decoder builds" {
         $buildRoot = Join-Path $TestDrive "transponder-build"
         $profileDir = Join-Path $buildRoot "c3_transponder"

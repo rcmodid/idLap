@@ -19,13 +19,17 @@ berlaku setelah perangkat dinyalakan ulang.
 | Perintah | Respons sukses | Keterangan |
 | --- | --- | --- |
 | `STATUS` | `OK ID=<id> CHANNEL=<channel>` | Membaca konfigurasi aktif. |
-| `SET ID <1..999999>` | `OK ID=<id>` | Mengubah ID transponder. |
+| `SET ID <1..99999>` | `OK ID=<id>` | Mengubah ID transponder, maksimal lima digit. |
 | `SET CHANNEL <1..14>` | `OK CHANNEL=<channel> REBOOT_REQUIRED` | Mengubah kanal ESP-NOW tersimpan. |
 | `REBOOT` | `OK REBOOTING` | Memulai ulang perangkat. |
 | `VERSION` | `OK IDLAP=<version>` | Membaca versi firmware/protokol. |
 
 Masukan tidak valid harus membalas `ERR <reason>`. Nilai yang disimpan harus
 tetap dipakai setelah perangkat dinyalakan ulang.
+
+ID baru dibatasi 1–99999, termasuk lewat perintah `ATUR_ID`. ID enam digit yang
+sudah tersimpan tetap dapat dibaca melalui `STATUS` agar bisa diganti tanpa
+mereset identitas perangkat secara diam-diam. Batas paket radio tidak diubah.
 
 Frame IR kompatibel gate lama tetap carrier 38 kHz, kode `0x09`, empat bit,
 LSB-first. Pengubahan ID serial tidak boleh mengubah frame ini atau format

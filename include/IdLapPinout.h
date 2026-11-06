@@ -15,6 +15,7 @@ constexpr uint8_t transponderStatusLed = 8;
 constexpr uint8_t decoderIrOutput = 0;
 constexpr uint8_t decoderDetectionLed = 1;
 constexpr uint8_t decoderBuzzer = 3;
+constexpr uint8_t decoderStatusLed = 8;
 
 constexpr uint8_t w5500Sck = 4;
 constexpr uint8_t w5500Miso = 5;

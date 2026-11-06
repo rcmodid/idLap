@@ -20,9 +20,9 @@ $ErrorActionPreference = "Stop"
 
 $profiles = @(
     @{ id = "c3_transponder"; name = "IDLap Transponder"; type = "transponder" },
-    @{ id = "c3_decoder_minimal"; name = "IDLap Decoder Minimal"; type = "decoder" },
-    @{ id = "c3_decoder_w5500"; name = "IDLap Decoder W5500"; type = "decoder" },
-    @{ id = "c3_decoder_lengkap"; name = "IDLap Decoder Lengkap"; type = "decoder" }
+    @{ id = "c3_decoder_minimal"; name = "idLap Decoder USB"; type = "decoder" },
+    @{ id = "c3_decoder_w5500"; name = "idLap Decoder W5500"; type = "decoder" },
+    @{ id = "c3_decoder_lengkap"; name = "idLap Decoder W5500 + OLED"; type = "decoder" }
 ) | Where-Object { $_.id -in $FirmwareProfiles }
 
 $partDefinitions = @(

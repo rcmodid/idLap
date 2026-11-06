@@ -36,7 +36,7 @@ bool idLapJalankanPerintah(const char* perintah, IdLapKonfigurasi* pengaturan,
   }
   uint32_t nilai = 0;
   if (angkaSetelahAwalan(perintah, "SET ID ", &nilai)) {
-    if (nilai < IDLAP_ID_MINIMUM || nilai > IDLAP_ID_MAKSIMUM) {
+    if (nilai < IDLAP_ID_MINIMUM || nilai > IDLAP_TRANSPONDER_ID_MAKSIMUM) {
       jawab(jawaban, ukuranJawaban, "ERR ID_INVALID");
       return false;
     }
@@ -46,7 +46,7 @@ bool idLapJalankanPerintah(const char* perintah, IdLapKonfigurasi* pengaturan,
     return true;
   }
   if (angkaSetelahAwalan(perintah, "ATUR_ID ", &nilai)) {
-    if (nilai < IDLAP_ID_MINIMUM || nilai > IDLAP_ID_MAKSIMUM) {
+    if (nilai < IDLAP_ID_MINIMUM || nilai > IDLAP_TRANSPONDER_ID_MAKSIMUM) {
       jawab(jawaban, ukuranJawaban, "ID TIDAK VALID");
       return false;
     }
