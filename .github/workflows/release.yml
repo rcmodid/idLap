@@ -14,21 +14,31 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: idlap-firmware-release
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version || github.ref }}
 
       - name: Set version
         id: version
+        env:
+          RELEASE_INPUT: ${{ inputs.version }}
         shell: bash
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "value=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            version="$RELEASE_INPUT"
           else
-            echo "value=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            version="$GITHUB_REF_NAME"
           fi
+          [[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'Use a stable vMAJOR.MINOR.PATCH tag'; exit 1; }
+          echo "value=$version" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -63,3 +73,32 @@ jobs:
             dist/*.bin
             dist/manifest.json
             dist/SHA256SUMS
+
+      - name: Publish to separate public firmware storage
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FIRMWARE_DEPLOY_KEY: ${{ secrets.FIRMWARE_DEPLOY_KEY }}
+          VERSION: ${{ steps.version.outputs.value }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$FIRMWARE_DEPLOY_KEY"
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$FIRMWARE_DEPLOY_KEY" > ~/.ssh/idlap_firmware
+          chmod 600 ~/.ssh/idlap_firmware
+          trap 'rm -f ~/.ssh/idlap_firmware' EXIT
+          # Obtain GitHub's advertised host keys over authenticated HTTPS.
+          gh api meta --jq '.ssh_keys[] | "github.com " + .' > ~/.ssh/known_hosts
+          export GIT_SSH_COMMAND='ssh -i ~/.ssh/idlap_firmware -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes'
+          git clone git@github.com:LuminixDevs/idlap-firmware.git public-firmware
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$VERSION" > release-metadata.json
+          python scripts/publish_firmware.py --assets dist --output public-firmware --metadata release-metadata.json
+          cd public-firmware
+          git config user.name 'idLap firmware publisher'
+          git config user.email 'firmware@rcmod.id'
+          git add .
+          if ! git diff --cached --quiet; then
+            git commit -m "firmware: publish $VERSION"
+            git push origin main
+          fi

@@ -1,4 +1,8 @@
-# idLap
+# idLap — Open RC Transponder
+
+![Official idLap branding by rcmod.id](docs/assets/idlap-official.png)
+
+Panduan rakit, download firmware terbaru, flash USB dari browser, dan pengaturan ID tersedia di **https://rcmod.id/idlap**. Binary publik didistribusikan terpisah di **https://github.com/LuminixDevs/idlap-firmware** agar download tetap dapat diakses tanpa login meskipun repository source ini private.
 
 Sistem transponder dan decoder lap-timing terbuka untuk ESP32-C3 SuperMini.
 
@@ -21,6 +25,14 @@ Jalankan tes inti:
 ```powershell
 pio test -e native
 ```
+
+Tes penerbitan distribusi binary publik:
+
+```powershell
+python -m unittest discover -s scripts -p test_publish_firmware.py
+```
+
+Workflow rilis menyalin firmware terverifikasi ke repository distribusi dengan secret `FIRMWARE_DEPLOY_KEY`, yaitu deploy key khusus repository distribusi. Versi yang sudah didistribusikan tidak boleh diubah; terbitkan tag versi baru untuk perubahan firmware.
 
 Spesifikasi radio, wiring, dan integrasi web berada di folder `docs/`.
 
